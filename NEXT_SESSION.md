@@ -1,3 +1,34 @@
+# Closing 2026-09-08 — the hit was marked per text NODE, and the commentary bolds half a word
+
+> # `claude/the_hit_was_marked_per_node_not_per_word.md`. Gate:
+> # `pipeline/check_hit_landing.js`, red first on 5 of its 7 assertions.
+>
+> **Two reader reports, one measured cause, plus a third defect found while
+> measuring.** All in `reader2.html`; `search.html` was checked and never had it.
+>
+> 1. **"Sometimes clicking an occurrence does not take one to the exact place."**
+>    **Length was a red herring** — the 2026-08-02 fix already marks first and
+>    scrolls to the mark. But `landOn` falls back to centring the paragraph when
+>    NO MARK IS MADE, and `markNeedles` matched inside each TEXT NODE separately.
+>    The edition bolds the lemma and leaves the enclitic outside — `<b>Bhūtesū</b>ti`
+>    — so the word is in the paragraph's text and in no single node.
+>    **185,177 of 512,798 bold spans end mid-word, 36.1%; 55-67% in the
+>    commentaries.** Worse than a miss: where a word occurs both split and
+>    unsplit, only the unsplit one marked and the reader was scrolled THERE —
+>    highlighted, but the wrong instance. Now matched across nodes.
+> 2. **"Going back to the search box, the dropdown does not appear; I delete the
+>    last letters and retype."** The workaround was the diagnosis: `doSearch` ran
+>    only on `input`, and `openHit` hides the dropdown. A `focus` handler now
+>    re-runs it from cache.
+> 3. **Found while measuring: `markInEl` folded diacritics UNCONDITIONALLY**,
+>    so with search exact-by-default a reader could search `tassā` and arrive on
+>    a highlighted `tassa`. Proven — unaccented `nidhaya` marked all six accented
+>    `nidhāya`. The mark now follows `sFold`. Same ground as exact-by-default.
+>
+> **What the gate cannot do:** jsdom has no layout, so it proves a mark is MADE
+> and not that the reader ARRIVES at it. If a hit is ever reported as landing
+> wrong while this gate is green, the fault is in `settleTo`, not in marking.
+
 # Closing 2026-09-06 — a phrase is consecutive tokens; the position store was measured and not built
 
 > # READ `claude/search_exact_by_default_and_postings_shards.md`, `claude/sweep_by_gram_not_by_key_list.md`, `claude/names_by_gram_not_whole.md` AND `claude/phrase_positions_are_a_different_semantic.md` BEFORE TOUCHING search.html, reader2.html, panel.js, searchcore.js OR site/index/.

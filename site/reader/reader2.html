@@ -321,8 +321,8 @@ mark.shl{background:var(--shl,#ffdf7e);color:#111;border-radius:2px;padding:0 1p
 .para,.uddana,.frontmatter{content-visibility:auto;contain-intrinsic-size:auto 180px}
 @media(max-width:860px){body{grid-template-columns:0 1fr}.side{position:fixed;top:52px;bottom:0;left:0;width:84%;max-width:330px;z-index:30;box-shadow:2px 0 16px rgba(0,0,0,.3)}body:not(.showsb) .side{display:none}}
 </style>
-<script src="../i18n.js?v=6dec7aac7e71"></script>
-<script src="../searchcore.js?v=6dec7aac7e71"></script>
+<script src="../i18n.js?v=9b25d8c80d18"></script>
+<script src="../searchcore.js?v=9b25d8c80d18"></script>
 <!-- WORD-LOOKUP PANEL — ON BY DEFAULT since 2026-08-02.  `?wl=0` turns it off
      and the choice sticks in localStorage['osbct-wl'].  It was off by default
      until then, which made it unreachable rather than merely optional: nothing
@@ -524,7 +524,7 @@ window.addEventListener('error',e=>{ const b=document.getElementById('errbar');
   if(b){ b.textContent='JS error: '+(e.message||'')+'  @'+(e.filename||'').split('/').pop()+':'+(e.lineno||''); b.hidden=false; } });
 window.addEventListener('unhandledrejection',e=>{ const b=document.getElementById('errbar');
   if(b){ b.textContent='Unhandled: '+((e.reason&&(e.reason.message||e.reason))||''); b.hidden=false; } });
-const BUILD='6dec7aac7e71';
+const BUILD='9b25d8c80d18';
 
 // !!! THIS PAGE IS THE ONE FILE IN THE SITE WITH NO CACHE-BUSTER, AND IT COST
 // A ROUND-TRIP ON NEARLY EVERY CHECK FOR TWO DAYS (2026-08-03).  Everything
@@ -3482,6 +3482,25 @@ function setSHelp(){ sHelp=!sHelp; doSearch($('#sq').value); }
 function setSFold(v){ sFold=!!v; try{ localStorage.setItem(FOLDKEY,sFold?'1':'0'); }catch(e){} doSearch($('#sq').value); }
 $('#sq').addEventListener('input',e=>{clearTimeout(sTimer);sTimer=setTimeout(()=>doSearch(e.target.value),180);});
 $('#sq').addEventListener('keydown',e=>{if(e.key==='Escape'){e.target.value='';$('#sdrop').hidden=true;}});
+// !!! COMING BACK TO THE BOX MUST BRING THE RESULTS BACK (2026-09-08,
+// user-reported: "when one goes back to the search box to see other instances
+// found for that word, the dialog box does not appear anymore. What I do is
+// delete the last letters and retype").
+//
+// That workaround IS the diagnosis. The dropdown is only ever built by
+// `doSearch`, and `doSearch` only ever ran on `input`; `openHit` hides the
+// dropdown when a result is clicked. So after visiting one hit the results
+// existed but nothing could show them again, and deleting a letter worked
+// because it fires `input`.
+//
+// Re-running the search is deliberate rather than un-hiding the old markup: the
+// layer chip, the fold switch and the index may all have moved since, and a
+// stale list that looks live is worse than none. Everything it needs is in
+// `SC`'s cache, so this repaints without a fetch.
+$('#sq').addEventListener('focus',()=>{
+  const dd=$('#sdrop'), q=($('#sq').value||'').trim();
+  if(dd && dd.hidden && q.length>=2) doSearch($('#sq').value);
+});
 // !!! CLICKING A CHIP CLOSED THE DROPDOWN AND LOOKED LIKE A LOST SEARCH
 // (2026-08-08, user-reported).  The chip's onclick repaints `dd.innerHTML`, and
 // MICROTASKS RUN BETWEEN LISTENERS OF THE SAME EVENT — every await in
@@ -3684,38 +3703,87 @@ async function openHit(key,kind){
 // ordinal instead.
 const HLFOLD={'ā':'a','ī':'i','ū':'u','ṁ':'m','ṃ':'m','ṅ':'n','ñ':'n','ṭ':'t','ḍ':'d','ṇ':'n','ḷ':'l'};
 const hfold=s=>s.toLowerCase().replace(/[āīūṁṃṅñṭḍṇḷ]/g,c=>HLFOLD[c]||c);
-function markNeedles(el,needles){
+// !!! MATCH ACROSS TEXT NODES, NOT INSIDE EACH ONE (2026-09-08, user-reported:
+// "sometimes, not always, clicking one of the occurrences does not take one to
+// the exact place").
+//
+// This used to walk the text nodes and match inside each separately. The
+// edition's commentary idiom sets the lemma in bold and leaves its enclitic
+// OUTSIDE the bold — `<b>Bhūtesū</b>ti`, `<b>daṇḍan</b>ti` — so such a word
+// exists in the paragraph's TEXT and in no single NODE, and no mark was made.
+// `landOn` then fell back to `settleTo(el)`, centring the paragraph: the
+// pre-2026-08-02 behaviour, and the report. Length was never the cause; it only
+// decides how visible the miss is.
+//
+// NOT A RARE CORNER: 185,177 of 512,798 bold spans in this corpus end mid-word
+// (36.1%), and 55-67% of them in the commentary volumes.
+//
+// The half-broken case was as bad as the missed one. Where a word occurs both
+// split and unsplit, only the unsplit one was marked and the reader was scrolled
+// THERE — landing on the wrong instance while still looking highlighted.
+// `25Khu08` ¶211 holds all three cases and is the gate's fixture.
+//
+// So: one string over the whole element with an offset per node, match in that,
+// then paint each node's share of every match. A match crossing a boundary
+// becomes two adjacent `<mark>`s, which is right — they are two nodes.
+// Painting runs BACK TO FRONT so replacing a node cannot invalidate the offsets
+// of the ones still to do. Returns the number of MATCHES, not of marks.
+function markNeedles(el,needles,fold){
+  const norm = fold ? hfold : (s=>s.toLowerCase());
   const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,null);
   const nodes=[]; while(walker.nextNode()){ if(walker.currentNode.parentNode.nodeName!=='MARK') nodes.push(walker.currentNode); }
-  let made=0;
-  for(const node of nodes){
-    const text=node.nodeValue, f=hfold(text);
-    const R=[];
-    for(const rx of needles){ rx.lastIndex=0; let m;
-      while((m=rx.exec(f))){ if(!m[0]){rx.lastIndex++;continue;} R.push([m.index,m.index+m[0].length]); } }
-    if(!R.length) continue;
-    R.sort((a,b)=>a[0]-b[0]);
-    const M=[]; for(const r of R){ if(M.length&&r[0]<=M[M.length-1][1]) M[M.length-1][1]=Math.max(M[M.length-1][1],r[1]); else M.push([r[0],r[1]]); }
+  if(!nodes.length) return 0;
+  let S=''; const base=[];
+  for(const n of nodes){ base.push(S.length); S+=n.nodeValue; }
+  const F=norm(S);
+  // !!! THE OFFSET MAP ONLY HOLDS IF NORMALISING IS 1:1 IN LENGTH. It is for
+  // this alphabet — every fold is one char for one char, and Pāḷi has no
+  // multi-character lowercase. Guarded rather than assumed: a locale that broke
+  // it would silently mark the wrong slice, which is worse than not marking.
+  if(F.length!==S.length) return 0;
+  const R=[];
+  for(const rx of needles){ rx.lastIndex=0; let m;
+    while((m=rx.exec(F))){ if(!m[0]){rx.lastIndex++;continue;} R.push([m.index,m.index+m[0].length]); } }
+  if(!R.length) return 0;
+  R.sort((a,b)=>a[0]-b[0]);
+  const M=[]; for(const r of R){ if(M.length&&r[0]<=M[M.length-1][1]) M[M.length-1][1]=Math.max(M[M.length-1][1],r[1]); else M.push([r[0],r[1]]); }
+  for(let k=nodes.length-1;k>=0;k--){
+    const node=nodes[k], b0=base[k], text=node.nodeValue, b1=b0+text.length;
+    const local=[];
+    for(const [s,e] of M){ if(e<=b0||s>=b1) continue;
+      local.push([Math.max(s,b0)-b0, Math.min(e,b1)-b0]); }
+    if(!local.length) continue;
     const frag=document.createDocumentFragment(); let last=0;
-    for(const [s,e] of M){ if(s>last)frag.appendChild(document.createTextNode(text.slice(last,s)));
-      const m=document.createElement('mark'); m.className='shl'; m.textContent=text.slice(s,e);
-      frag.appendChild(m); last=e; }
+    for(const [s,e] of local){ if(s>last)frag.appendChild(document.createTextNode(text.slice(last,s)));
+      const mk=document.createElement('mark'); mk.className='shl'; mk.textContent=text.slice(s,e);
+      frag.appendChild(mk); last=e; }
     if(last<text.length) frag.appendChild(document.createTextNode(text.slice(last)));
     node.parentNode.replaceChild(frag,node);
-    made+=M.length;
   }
-  return made;
+  return M.length;
 }
 // A multi-word arrival tries the PHRASE first — one mark, exactly what was
 // searched — and only if no text node carries the whole phrase (a bold lemma
 // can split one across nodes, and an "all words, not adjacent" hit never had
 // it) falls back to marking each word where it stands (2026-08-08).
 // Needles are REGEXES so a `*` arrival marks the whole matched word.
+// !!! THE HIGHLIGHT MUST ASK THE SAME QUESTION THE SEARCH ASKED (2026-09-08).
+// This folded diacritics UNCONDITIONALLY, which was right while search folded
+// by default and is wrong now that it does not: a reader could search `tassā`,
+// exact, and arrive on a highlighted `tassa`. Proven before it was changed —
+// unaccented `nidhaya` marked all six accented `nidhāya` in `25Khu08` ¶211.
+// `tassa` and `tassā` are different words; a mark that says otherwise is a
+// provenance defect, not a cosmetic one. So the mode follows `sFold`, the same
+// flag the box and the result line show.
 function markInEl(el,q){
-  if(!el||!q) return; const fq=hfold(q.trim()).replace(/\s+/g,' '); if(!fq) return;
+  if(!el||!q) return 0;
+  const fold=!!sFold, norm=fold?hfold:(s=>s.toLowerCase());
+  const fq=norm(q.trim()).replace(/\s+/g,' '); if(!fq) return 0;
   const words=fq.split(' ').filter(Boolean);
-  if(markNeedles(el,[new RegExp(words.map(wpat).join(' '),'g')])) return;
-  if(words.length>1) markNeedles(el,words.map(w=>new RegExp(wpat(w),'g')));
+  const n=markNeedles(el,[new RegExp(words.map(wpat).join(' '),'g')],fold);
+  if(n) return n;
+  if(words.length>1) return markNeedles(el,words.map(w=>new RegExp(wpat(w),'g')),fold);
+  return 0;
 }
 async function resolveHash(){
   const h=decodeURIComponent((location.hash||'').replace(/^#/,'')); if(!h) return null;
