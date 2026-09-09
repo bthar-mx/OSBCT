@@ -1,3 +1,32 @@
+# Run on the host — 2026-09-09: E078 applied, v2.10.1
+
+Four commands, in this order — upload BEFORE push, tag AFTER push:
+
+```bash
+cd ~/Documents/OSBCT
+./pipeline/r2_upload.sh      # rclone: 3 freq shards change (a_, yam, ay) — the WLV bump
+                             # 20260909a means nothing until these are in the bucket
+git push                     # v2.10.1: E078, WLV 20260909a, panel.js?v=20260909a
+git tag v2.10.1
+git push origin v2.10.1
+```
+
+Then say so in the chat: the GitHub release (notes in `docs/RELEASE_NOTES_v2.10.1.md`)
+and the Zenodo DOI are done from the browser pane, and the DOI is recorded in
+CITATION.cff + README afterwards.
+
+Live checks, cache-busted, after Pages has had its minutes:
+
+```
+https://buddha-dhamma.net/build.json?cb=…            -> {"build": "319bd7d32d81", "date": "2026-09-09"}
+https://buddha-dhamma.net/reader/reader2.html?cb=…#25KhuA06#38   scroll to p. 58:
+                                                        "hoti. Ayaṁ tāvetthapadato"
+https://dict.buddha-dhamma.net/lookup/freq/ay.json?v=20260909a   -> "ayaṁ":[23595,…
+python3 pipeline/verify_live.py
+```
+
+---
+
 # Run on the host — 2026-09-06, later: the dictionary manifests
 
 Two commands, in this order:

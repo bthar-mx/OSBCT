@@ -408,7 +408,7 @@ var CACHE = {};
 // means anything: the manifest is fetched `?v=WLV`, and a reader who gets the
 // new version against a bucket that has no `hw/` gets a 404 and the same "no
 // entry" they get today.  Upload first, bump second.
-var WLV = '20260810a';
+var WLV = '20260909a';
 
 // ---------------------------------------------------- gzipped shard sets --
 // WHY THE SHARDS ARE STORED GZIPPED, AND WHY THAT IS NOT THE SAME AS

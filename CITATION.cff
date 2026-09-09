@@ -23,8 +23,21 @@ keywords:
 url: "https://buddha-dhamma.net"
 repository-code: "https://github.com/bthar-mx/OSBCT"
 license: CC-BY-4.0
-version: "2.10.0"
-date-released: "2026-09-06"
+version: "2.10.1"
+date-released: "2026-09-09"
+# 2026-09-09, v2.10.1: ONE WORD of the text changes, and the fault is the
+# printed edition's own — the first such applied to the served text.  25KhuA06
+# printed p. 58 prints "hoti. A yaṁ tāvetthapadato" with a space inside Ayaṁ
+# at a line end; the original text layer has the gap too, so this is a
+# misprint of the edition, not of the conversion.  Reported by the reader,
+# verified at the printed page first, recorded as E078 with the printed
+# reading preserved and the emendation attributed, and applied at the
+# reader's decision by pipeline/apply_text_errata.py from the register:
+# corpus paragraph, verse store, page-break map (re-derived: Δ-1, two later
+# breaks moved by one), search index and postings, three frequency counters
+# (stores on R2: r2_upload.sh + WLV 20260909a).  Nothing else moved.  Patch,
+# not minor: the 2.7.1 precedent.  Three-file checklist bumped together, tag
+# cut LAST.
 # 2026-09-06, v2.10.0: no text changed — A PHRASE IS CONSECUTIVE WORDS.  A phrase
 # had been counted as a substring of the paragraph text: `tassa bhagavato`
 # inside *etassa bhagavato* (63 paragraphs), and *dhammā”ti* refused for

@@ -98,7 +98,7 @@
 <script>
 // cache-buster; `pipeline/stamp_build.py` derives BUILD from the data and
 // rewrites it, so a rebuild can never be invisible to a returning browser.
-const BUILD='9b25d8c80d18';
+const BUILD='319bd7d32d81';
 function bust(u){ return u+(u.includes('?')?'&':'?')+'v='+BUILD; }
 
 document.documentElement.setAttribute('data-theme',localStorage.getItem('osbct-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
@@ -152,8 +152,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   longer words. Results show the book, the printed page and the paragraph;
   click a result to open it in the reader at the marked word.
 </footer>
-<script src="i18n.js?v=9b25d8c80d18"></script>
-<script src="searchcore.js?v=9b25d8c80d18"></script>
+<script src="i18n.js?v=319bd7d32d81"></script>
+<script src="searchcore.js?v=319bd7d32d81"></script>
 <script>
 // ONE SEARCH IMPLEMENTATION, IN searchcore.js (2026-09-05) — this page is its
 // UI.  Everything about keys, buckets, sweeps, postings and text chunks that

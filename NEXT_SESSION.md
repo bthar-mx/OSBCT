@@ -1,3 +1,36 @@
+# Closing 2026-09-09 — E078: the edition's own "A yaṁ", recorded, then applied; v2.10.1
+
+> **Reader: "correct `A yaṁ tāvetthapadato` to `Ayaṁ …`".** Checked at the printed page
+> FIRST (25KhuA06, printed p. 58 = PDF page 62, `outputs/25KhuA06_p47.png` in the
+> session): the EDITION prints the space, at a line end; the VZTimes text layer has
+> the two tokens with the ordinary gap. Not a conversion fault — an erratum of the
+> printed edition, the first such the reader chose to apply to the served text.
+>
+> * **E078** in `data/errata.json` (+ `site/errata.json`, `docs/PDF_ERRATA.md`
+>   regenerated): printed reading preserved, emendation attributed, `confirmed`,
+>   and — new for an edition erratum — `apply_from`/`apply_to`/`ord`.
+> * **`pipeline/apply_text_errata.py`** (NEW): applies only entries carrying that
+>   pair; refuses if not exactly once; patches `site/<VOL>.json`, the verse store,
+>   shifts bold ranges by Δ, and REPORTS that pbreak must be re-derived. Run:
+>   `apply_text_errata.py E078 --write` → `_xc/pagemark/derive.py 25KhuA06 --out
+>   site/reader/pbreak` (old file moved away first; only ord 38's two later
+>   offsets moved, by −1) → `build_pagespan.py --write`, `build_pageindex.py` →
+>   `build_search_index.py 25KhuA06 --write`, `--terms --write`,
+>   `build_term_postings.py`, `build_gram_shards.py` (k.txt/tg unchanged: no key
+>   appeared or vanished; only `tp/a_ ay yam` + `tx/25KhuA06/1` changed).
+> * **Frequency store**: `a` 123→122, `yaṁ` 18478→18477, `ayaṁ` 23594→23595
+>   (commentary column likewise), in `stores/lookup/freq/{a_,yam,ay}.json` and
+>   `_vocab/freq/` (the source). **STORE CHANGE → `r2_upload.sh` must run and
+>   `WLV` is bumped to `20260909a`** (`panel.js?v=20260909a` too).
+> * **v2.10.1** — patch, the 2.7.1 precedent (one word moves). Three-file bump;
+>   `docs/RELEASE_NOTES_v2.10.1.md`; stamp `319bd7d32d81`. Tag LAST, after the push; then GitHub release,
+>   Zenodo DOI, record it in CITATION.cff + README.
+> * Gates green: check_search, perf_search, check_lookup_reach, check_hit_landing,
+>   check_columns, check_reader_range, check_page_fidelity 25KhuA06.
+>
+> `corpus/*.json`, `corpus/*.txt`, `_khua/` keep the printed form — superseded
+> working snapshots, not served (E040's note).
+
 # Closing 2026-09-08 — the hit was marked per text NODE, and the commentary bolds half a word
 
 > # `claude/the_hit_was_marked_per_node_not_per_word.md`. Gate:

@@ -4,7 +4,7 @@
      — edit the REGISTER, not this file, and regenerate.  The same
      register feeds the site's Errata page. -->
 
-Rendered 2026-08-09 from a register of **68 entries**.  The corpus never
+Rendered 2026-09-09 from a register of **69 entries**.  The corpus never
 alters these readings (working principle 3): the printed reading is
 preserved wherever the text is quoted, and every emendation below is a
 **candidate pending scholarly confirmation**.  This document exists so
@@ -62,6 +62,7 @@ publisher — can be prepared from one list.
 | E037 | 22AbhiT01 | 27 | `dhātuþoti` | `dhātuyoti` | review |
 | E038 | 22AbhiT01 | 184 | `adhippāþo` | `adhippāyo` | review |
 | E039 | 24AbhiT03 | 91 | `Nènācittavasena` | `Nānācittavasena` | high |
+| E078 | 25KhuA06 | 58 | `A yaṁ tāvetthapadato atthavaṇṇanā.` | `Ayaṁ tāvetthapadato atthavaṇṇanā.` | high |
 | E040 | 25VsmT01 | 17 | `Sêlādidhammehi` | `Sīlādidhammehi` | high |
 | E041 | 25VsmT01 | 119 | `santòtṭho` | `santuṭṭho` | review |
 | E042 | 25VsmT01 | 130 | `pathavīkasiṇādivaḍḍhaní` | `pathavīkasiṇādivaḍḍhane` | high |
@@ -219,6 +220,10 @@ publisher — can be prepared from one list.
 ### 24AbhiT03
 
 - **E039** (printed p. 91, Aṭṭhakathā): Misprint in the printed edition (corrupted glyph). Printed reading preserved; emendation suggested from context. CONFIRMED by the reader 2026-08-09 against the printed page, from the visual review sheet (_review/glyph_review.html; verdicts in _review/verdicts_2026-08-09.json, joined in _review/apply_table_2026-08-09.json). The served text ALREADY carries this reading: the pair is applied at build time from data/glyph_errata.json, over the PDF text layer, before extraction. corpus/*.txt is a superseded 2026-07-29 working snapshot and still shows the corrupt form; that is staleness, not principle 3.
+
+### 25KhuA06
+
+- **E078** (printed p. 58, Aṭṭhakathā): Reported by the reader 2026-09-09 and VERIFIED AT THE PRINTED PAGE before anything was touched: Paramatthajotikā (Suttanipāta-aṭṭhakathā), Khaggavisāṇasutta, printed p. 58 (PDF page 62), last word of a line — the edition prints “hoti. A yaṁ” with a space, and the VZTimes text layer of the original PDF carries the two tokens `A` and `yaÑ` with the ordinary inter-word gap, so this is a misprint of the edition, not a conversion fault (the paragraph begins on p. 47, which is what `printed` records). The sentence is the stock closing formula “Ayaṁ tāvettha padato atthavaṇṇanā” (cf. 25KhuA06 elsewhere). Printed reading preserved here; the emendation is the reader’s. APPLIED TO THE SERVED TEXT at the reader’s decision the same day, by pipeline/apply_text_errata.py from this entry (apply_from -> apply_to): site/25KhuA06.json ord 38, the verse store, the page-break map (re-derived), the search index and postings shards, and the three word-frequency counters (a, yaṁ, ayaṁ) in stores/lookup/freq. Δ−1 character, so every page-break offset after it in the paragraph moved by one; corpus/*.txt keeps the printed form.
 
 ### 25VsmT01
 

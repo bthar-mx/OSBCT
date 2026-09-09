@@ -1,13 +1,13 @@
 {
  "title": "Errata register — Sixth Buddhist Council Tipiṭaka",
  "principle": "Errata are recorded as an overlay: the printed reading is preserved verbatim; suggested emendations are marked as candidates pending scholarly confirmation. The base text is never silently altered.",
- "generated": "2026-08-09",
- "method": "corpus-wide orthographic scan (characters outside the Pāḷi alphabet), adjudicated against rendered pages",
+ "generated": "2026-09-09",
+ "method": "corpus-wide orthographic scan (characters outside the Pāḷi alphabet), adjudicated against rendered pages; from 2026-09-09 also readings reported by the reader and verified at the printed page",
  "counts": {
-  "edition_erratum": 67,
+  "edition_erratum": 68,
   "not_an_erratum": 1,
-  "total": 68,
-  "entries": 68
+  "total": 69,
+  "entries": 69
  },
  "entries": [
   {
@@ -1079,6 +1079,25 @@
    "context": "Namo Tassa Bhagavato Arahato SammāsamBuddhassa.",
    "status": "candidate",
    "note": "Capital T on tassa and mid-word capital B in the homage (Bhikkhunīpātimokkha opening). Found 2026-08-08 when the homage census was re-run CASE-BLIND after the reader caught `Namo Tassa` at a Pātimokkha head that the first, case-sensitive census had missed; verified at the printed page."
+  },
+  {
+   "id": "E078",
+   "volume": "25KhuA06",
+   "layer": "Aṭṭhakathā",
+   "paragraph_id": "ParamatthajotikāyaKhuddakaṭṭhakathāya/X/Suttanipātaṭṭhakathā/35",
+   "ord": 38,
+   "printed_page": 58,
+   "category": "edition_erratum",
+   "glyph": null,
+   "codepoint": null,
+   "confidence": "high",
+   "status": "confirmed",
+   "printed_reading": "A yaṁ tāvetthapadato atthavaṇṇanā.",
+   "suggested_reading": "Ayaṁ tāvetthapadato atthavaṇṇanā.",
+   "context": "ppoti khaggavisāṇasadisoti vuttaṁ hoti. A yaṁ tāvetthapadato atthavaṇṇanā. Adhippāyān",
+   "apply_from": "hoti. A yaṁ tāvetthapadato",
+   "apply_to": "hoti. Ayaṁ tāvetthapadato",
+   "note": "Reported by the reader 2026-09-09 and VERIFIED AT THE PRINTED PAGE before anything was touched: Paramatthajotikā (Suttanipāta-aṭṭhakathā), Khaggavisāṇasutta, printed p. 58 (PDF page 62), last word of a line — the edition prints “hoti. A yaṁ” with a space, and the VZTimes text layer of the original PDF carries the two tokens `A` and `yaÑ` with the ordinary inter-word gap, so this is a misprint of the edition, not a conversion fault (the paragraph begins on p. 47, which is what `printed` records). The sentence is the stock closing formula “Ayaṁ tāvettha padato atthavaṇṇanā” (cf. 25KhuA06 elsewhere). Printed reading preserved here; the emendation is the reader’s. APPLIED TO THE SERVED TEXT at the reader’s decision the same day, by pipeline/apply_text_errata.py from this entry (apply_from -> apply_to): site/25KhuA06.json ord 38, the verse store, the page-break map (re-derived), the search index and postings shards, and the three word-frequency counters (a, yaṁ, ayaṁ) in stores/lookup/freq. Δ−1 character, so every page-break offset after it in the paragraph moved by one; corpus/*.txt keeps the printed form."
   }
  ],
  "note_ligature_fix": "9 candidates were resolved by a subsequent ligature-glyph fix (6 ṇa/Ū ligatures in 08DiA02 mis-extracted as control chars, and 3 Ḍ glyphs in 27Khu10/12DiT05 mis-read as q). The affected PDFs and text were corrected; those entries were removed."

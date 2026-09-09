@@ -321,8 +321,8 @@ mark.shl{background:var(--shl,#ffdf7e);color:#111;border-radius:2px;padding:0 1p
 .para,.uddana,.frontmatter{content-visibility:auto;contain-intrinsic-size:auto 180px}
 @media(max-width:860px){body{grid-template-columns:0 1fr}.side{position:fixed;top:52px;bottom:0;left:0;width:84%;max-width:330px;z-index:30;box-shadow:2px 0 16px rgba(0,0,0,.3)}body:not(.showsb) .side{display:none}}
 </style>
-<script src="../i18n.js?v=9b25d8c80d18"></script>
-<script src="../searchcore.js?v=9b25d8c80d18"></script>
+<script src="../i18n.js?v=319bd7d32d81"></script>
+<script src="../searchcore.js?v=319bd7d32d81"></script>
 <!-- WORD-LOOKUP PANEL — ON BY DEFAULT since 2026-08-02.  `?wl=0` turns it off
      and the choice sticks in localStorage['osbct-wl'].  It was off by default
      until then, which made it unreachable rather than merely optional: nothing
@@ -339,7 +339,7 @@ mark.shl{background:var(--shl,#ffdf7e);color:#111;border-radius:2px;padding:0 1p
      on demand from stores/lookup_eval/family/).  WLV moved too this time —
      20260809a — because the STORES changed: dpd/ rebuilt on the 2026-07-28
      DPD release, family/ is new, and BOTH must be uploaded to the R2 bucket. -->
-<script src="panel.js?v=20260905a" defer></script>
+<script src="panel.js?v=20260909a" defer></script>
 </head>
 <body>
   <div id="errbar" hidden style="position:fixed;left:0;right:0;bottom:0;z-index:999;background:#7f1d1d;color:#fff;font:12px/1.4 ui-monospace,monospace;padding:8px 10px;white-space:pre-wrap"></div>
@@ -524,7 +524,7 @@ window.addEventListener('error',e=>{ const b=document.getElementById('errbar');
   if(b){ b.textContent='JS error: '+(e.message||'')+'  @'+(e.filename||'').split('/').pop()+':'+(e.lineno||''); b.hidden=false; } });
 window.addEventListener('unhandledrejection',e=>{ const b=document.getElementById('errbar');
   if(b){ b.textContent='Unhandled: '+((e.reason&&(e.reason.message||e.reason))||''); b.hidden=false; } });
-const BUILD='9b25d8c80d18';
+const BUILD='319bd7d32d81';
 
 // !!! THIS PAGE IS THE ONE FILE IN THE SITE WITH NO CACHE-BUSTER, AND IT COST
 // A ROUND-TRIP ON NEARLY EVERY CHECK FOR TWO DAYS (2026-08-03).  Everything
