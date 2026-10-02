@@ -4,6 +4,30 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sixth Buddhist Council Tipiṭaka (Chaṭṭhasaṅgītipiṭaka)</title>
+<meta name="description" content="Searchable, cross-referenced Unicode edition of the Sixth Buddhist Council (Chaṭṭha Saṅgāyana) Pāḷi Tipiṭaka with its Aṭṭhakathā and Ṭīkā: 118 volumes, 54,036 variant readings, free PDFs.">
+<link rel="canonical" href="https://buddha-dhamma.net/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Sixth Buddhist Council Tipiṭaka">
+<meta property="og:title" content="Sixth Buddhist Council Tipiṭaka (Chaṭṭhasaṅgītipiṭaka)">
+<meta property="og:description" content="The Chaṭṭha Saṅgāyana Pāḷi Canon with commentaries and subcommentaries: read, search and download all 118 volumes.">
+<meta property="og:url" content="https://buddha-dhamma.net/">
+<!-- STRUCTURED DATA (2026-10-01, SEO pass).  WebSite + Dataset.  The Dataset
+     points at the Zenodo CONCEPT DOI (CITATION.cff), which always resolves to
+     the newest deposit, so it never needs bumping on a release. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"WebSite","@id":"https://buddha-dhamma.net/#website","url":"https://buddha-dhamma.net/",
+  "name":"Sixth Buddhist Council Tipiṭaka","alternateName":["Chaṭṭhasaṅgītipiṭaka","OSBCT","Tipitaka Chattha Sangayana"],
+  "inLanguage":"pi","publisher":[{"@type":"Organization","name":"Instituto de Estudios Buddhistas Hispano (IEBH)","url":"https://iebh.org/"},
+  {"@type":"Organization","name":"Buddhismo Theravāda Hispano A.R. (BTHAR)"}]},
+ {"@type":"Dataset","name":"Official Sixth Buddhist Council Tipiṭaka (OSBCT): Unicode corpus",
+  "description":"Unicode corpus of the Sixth Buddhist Council (Chaṭṭha Saṅgāyana) recension of the Pāḷi Tipiṭaka with Aṭṭhakathā and Ṭīkā: 118 volumes, 89,512 paragraphs, 54,036 variant readings, cross-layer links.",
+  "url":"https://buddha-dhamma.net/","sameAs":["https://doi.org/10.5281/zenodo.21495338","https://github.com/bthar-mx/OSBCT"],
+  "identifier":"https://doi.org/10.5281/zenodo.21495338","inLanguage":"pi",
+  "keywords":["Tipiṭaka","Tipitaka","Pāḷi Canon","Pali Canon","Chaṭṭha Saṅgāyana","Sixth Buddhist Council","Aṭṭhakathā","Ṭīkā","Theravāda"],
+  "isAccessibleForFree":true,"creator":{"@type":"Organization","name":"Instituto de Estudios Buddhistas Hispano (IEBH)","url":"https://iebh.org/"}}
+]}
+</script>
   <!-- Type is self-hosted; see fonts/fonts.css.  The Pāḷi diacritics live in the
      `latin-ext` subset, not `latin`, and both files are required. -->
 <link rel="preload" href="fonts/gentium-plus-latin-ext-400-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -30,6 +54,17 @@
   .foot{margin-top:30px;font-family:system-ui,sans-serif;font-size:11px;color:var(--mut);line-height:1.7}
   .credits{margin:22px auto 0;max-width:560px;font-family:system-ui,sans-serif;font-size:9px;color:var(--mut);line-height:1.6;border-top:1px solid var(--line);padding-top:14px}
   .credits a{color:var(--accent)}
+  /* STUDY TOOLS (2026-10-01).  The sister sites under buddha-dhamma.net had no
+     inbound link from anywhere, which is why Google had never discovered most
+     of them.  This block is the hub link.  c3 and nissaya are deliberately
+     NOT listed (variant / private build) — not linked, but not noindexed. */
+  .tools{margin:28px auto 0;max-width:600px;text-align:left;border-top:1px solid var(--line);padding-top:18px}
+  .tools h2{font-size:17px;margin:0 0 4px;text-align:center;font-weight:normal;letter-spacing:.03em}
+  .tools .note{font-family:system-ui,sans-serif;font-size:11px;color:var(--mut);text-align:center;margin-bottom:12px}
+  .tools ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px}
+  .tools a{display:block;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);text-decoration:none;color:var(--fg)}
+  .tools a b{color:var(--accent);font-weight:normal;display:block;font-size:15px}
+  .tools a span{display:block;font-family:system-ui,sans-serif;font-size:12px;line-height:1.45;color:var(--mut);margin-top:2px}
 </style>
 </head>
 <body>
@@ -38,7 +73,7 @@
     <button class="themebtn" onclick="var d=document.documentElement,n=d.getAttribute('data-theme')==='dark'?'light':'dark';d.setAttribute('data-theme',n);localStorage.setItem('osbct-theme',n)" data-i18n-title="theme_toggle" title="Toggle light/dark">◐</button>
   </div>
   <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('osbct-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));</script>
-  <script src="i18n.js?v=319bd7d32d81"></script>
+  <script src="i18n.js?v=ec9c1594e36f"></script>
   <div class="card">
     <h1>Sixth Buddhist Council Tipiṭaka<br><span style="font-size:.62em;color:var(--mut)">(Chaṭṭhasaṅgītipiṭaka)</span></h1>
     <div class="sub" data-i18n="land_sub">Chaṭṭha Saṅgāyana edition — Pāḷi Canon, Commentaries &amp; Subcommentaries</div>
@@ -57,6 +92,17 @@
       <a class="btn alt" href="about.html" data-i18n="btn_about">About</a>
       <a class="btn alt" href="errata.html" data-i18n="btn_errata">Errata</a>
     </div>
+    <nav class="tools" aria-labelledby="tools-h">
+      <h2 id="tools-h" data-i18n="tools_h">Study tools</h2>
+      <div class="note" data-i18n="tools_note">Companion sites by the same team — most are in Spanish.</div>
+      <ul>
+        <li><a href="https://gramaticas.buddha-dhamma.net/"><b>Gramáticas Pāḷi</b><span data-i18n="tool_gram">Pāḷi grammars in Spanish: Kaccāyana and study resources</span></a></li>
+        <li><a href="https://citta.buddha-dhamma.net/"><b>121 Citta</b><span data-i18n="tool_citta">Interactive Abhidhamma matrix of the 121 types of consciousness</span></a></li>
+        <li><a href="https://cetasika.buddha-dhamma.net/"><b>52 Cetasika</b><span data-i18n="tool_cetasika">The 52 mental factors: interactive checklist</span></a></li>
+        <li><a href="https://tabla.buddha-dhamma.net/"><b>Tika-mātikā</b><span data-i18n="tool_tabla">Table of the Abhidhamma triads (tika-mātikā)</span></a></li>
+        <li><a href="https://abhidhana.buddha-dhamma.net/"><b>Pāḷi-Myanmā Abhidhāna</b><span data-i18n="tool_abhidhana">Tipiṭaka Pāḷi–Burmese dictionary</span></a></li>
+      </ul>
+    </nav>
     <div class="foot" data-i18n="land_foot">
       Tipiṭaka · Aṭṭhakathā · Ṭīkā — navigate from any canon paragraph to its commentary and
       subcommentary. Diacritic-insensitive search across the whole corpus.

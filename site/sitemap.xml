@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The site's HTML pages.  The reader is a single URL (its positions live in
+     the #fragment, which crawlers ignore); per-text pages, when generated, get
+     their own sitemap listed here as a sitemap index.  2026-10-01. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://buddha-dhamma.net/</loc></url>
+  <url><loc>https://buddha-dhamma.net/reader/reader2.html</loc></url>
+  <url><loc>https://buddha-dhamma.net/search.html</loc></url>
+  <url><loc>https://buddha-dhamma.net/downloads.html</loc></url>
+  <url><loc>https://buddha-dhamma.net/about.html</loc></url>
+  <url><loc>https://buddha-dhamma.net/errata.html</loc></url>
+</urlset>

@@ -1,0 +1,8 @@
+# buddha-dhamma.net — the Sixth Buddhist Council Tipiṭaka (OSBCT).
+# Everything is open to crawlers.  The reader's text is loaded from JSON under
+# /reader/ and the volume files at the site root; those stay crawlable so a
+# renderer can build the page.  Added 2026-10-01 (SEO pass).
+User-agent: *
+Allow: /
+
+Sitemap: https://buddha-dhamma.net/sitemap.xml

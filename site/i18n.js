@@ -89,6 +89,15 @@ window.I18N = {
   btn_search:{en:'Search',es:'Buscar'},
   btn_download:{en:'Download PDFs',es:'Descargar PDF'},
   btn_about:{en:'About',es:'Acerca'},
+  // STUDY TOOLS block on the landing page (2026-10-01, SEO pass).  The tool
+  // NAMES stay untranslated in the HTML (they are titles); only the glosses move.
+  tools_h:{en:'Study tools',es:'Herramientas de estudio'},
+  tools_note:{en:'Companion sites by the same team — most are in Spanish.',es:'Sitios complementarios del mismo equipo.'},
+  tool_gram:{en:'Pāḷi grammars in Spanish: Kaccāyana and study resources',es:'Gramáticas pāḷi en español: Kaccāyana y recursos de estudio'},
+  tool_citta:{en:'Interactive Abhidhamma matrix of the 121 types of consciousness',es:'Matriz interactiva del Abhidhamma: las 121 conciencias'},
+  tool_cetasika:{en:'The 52 mental factors: interactive checklist',es:'Los 52 factores mentales: lista interactiva'},
+  tool_tabla:{en:'Table of the Abhidhamma triads (tika-mātikā)',es:'Esquema de tríadas del Abhidhamma (tika-mātikā)'},
+  tool_abhidhana:{en:'Tipiṭaka Pāḷi–Burmese dictionary',es:'Diccionario pāḷi–birmano del Tipiṭaka'},
   land_foot:{en:'Tipiṭaka · Aṭṭhakathā · Ṭīkā — navigate from any canon paragraph to its commentary and subcommentary. Diacritic-insensitive search across the whole corpus.',
              es:'Tipiṭaka · Aṭṭhakathā · Ṭīkā — navegue desde cualquier párrafo del canon a su comentario y subcomentario. Búsqueda insensible a diacríticos en todo el corpus.'},
   credits:{en:'<b>Editorial Board and Staff.</b> This Tipiṭaka material has been sponsored by the Venerable Aggasāmi, Mr. Tran Minh Loi, Mr. Tu Son, the Tathāgata Meditation Center, the Paññārāma Meditation Center, and devotees from Myanmar and Vietnam. This material is published by the Ministry of Religious Affairs of Myanmar for free distribution as a Gift of the Dhamma. Permission is granted to duplicate this material for free, non-commercial distribution. Comments and suggestions are welcome; please send them to <a href="mailto:buddhasasanasociety@gmail.com">buddhasasanasociety@gmail.com</a>. Version 01 — 10 November 2008. This site is a project of the Instituto de Estudios Buddhistas Hispano (IEBH) and Buddhismo Theravāda México-Hispano AR (BTHAR). For more information about this site and our projects, contact <a href="mailto:admin@iebh.org">admin@iebh.org</a> or <a href="mailto:admin@bthar.org">admin@bthar.org</a>.',
