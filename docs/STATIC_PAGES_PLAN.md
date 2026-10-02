@@ -1,5 +1,15 @@
 # Static per-text pages — plan (2026-10-01)
 
+## Status (2026-10-02): PILOT BUILT — Dīghanikāya canon
+
+`pipeline/build_static_pages.py` writes `site/t/dn/` (34 suttas + index, about 1.8 MB) and
+`site/sitemap-texts.xml` (35 URLs, listed in robots.txt). Granularity: one page per top-level
+nav node (= one per sutta); sections from the node's kids become `<h2>`. Checked: every
+paragraph of 06Di01 (559), 07Di02 (444) and 08Di03 (360) appears exactly once. Variant markers
+use the reader's own FNM rule and are kept as `<sup>`, without the notes (1,013 markers, none
+left as bare digits). No commentary links yet. Linked from the landing page ("Dīghanikāya as plain pages").
+To extend: add a row to `NIKAYAS` in the script. Next decision after 2–3 weeks of Search Console data.
+
 ## Why
 
 Search Console and `site:` searches (2026-10-01) show the main site has about

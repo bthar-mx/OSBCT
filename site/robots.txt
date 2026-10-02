@@ -6,3 +6,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://buddha-dhamma.net/sitemap.xml
+Sitemap: https://buddha-dhamma.net/sitemap-texts.xml

@@ -56,14 +56,16 @@
   .credits a{color:var(--accent)}
   /* STUDY TOOLS (2026-10-01).  The sister sites under buddha-dhamma.net had no
      inbound link from anywhere, which is why Google had never discovered most
-     of them.  This block is the hub link.  c3 and nissaya are deliberately
-     NOT listed (variant / private build) — not linked, but not noindexed. */
+     of them.  This block is the hub link.  nissaya is deliberately NOT listed
+     (private, behind Cloudflare Access).  c3 added 2026-10-02 as a separate tool. */
   .tools{margin:28px auto 0;max-width:600px;text-align:left;border-top:1px solid var(--line);padding-top:18px}
   .tools h2{font-size:17px;margin:0 0 4px;text-align:center;font-weight:normal;letter-spacing:.03em}
   .tools .note{font-family:system-ui,sans-serif;font-size:11px;color:var(--mut);text-align:center;margin-bottom:12px}
   .tools ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px}
   .tools a{display:block;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);text-decoration:none;color:var(--fg)}
   .tools a b{color:var(--accent);font-weight:normal;display:block;font-size:15px}
+  .texts{margin:18px 0 0;font-family:system-ui,sans-serif;font-size:13px;color:var(--mut)}
+  .texts a{color:var(--accent)}
   .tools a span{display:block;font-family:system-ui,sans-serif;font-size:12px;line-height:1.45;color:var(--mut);margin-top:2px}
 </style>
 </head>
@@ -73,7 +75,7 @@
     <button class="themebtn" onclick="var d=document.documentElement,n=d.getAttribute('data-theme')==='dark'?'light':'dark';d.setAttribute('data-theme',n);localStorage.setItem('osbct-theme',n)" data-i18n-title="theme_toggle" title="Toggle light/dark">◐</button>
   </div>
   <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('osbct-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));</script>
-  <script src="i18n.js?v=ec9c1594e36f"></script>
+  <script src="i18n.js?v=fe1737e9834a"></script>
   <div class="card">
     <h1>Sixth Buddhist Council Tipiṭaka<br><span style="font-size:.62em;color:var(--mut)">(Chaṭṭhasaṅgītipiṭaka)</span></h1>
     <div class="sub" data-i18n="land_sub">Chaṭṭha Saṅgāyana edition — Pāḷi Canon, Commentaries &amp; Subcommentaries</div>
@@ -98,11 +100,15 @@
       <ul>
         <li><a href="https://gramaticas.buddha-dhamma.net/"><b>Gramáticas Pāḷi</b><span data-i18n="tool_gram">Pāḷi grammars in Spanish: Kaccāyana and study resources</span></a></li>
         <li><a href="https://citta.buddha-dhamma.net/"><b>121 Citta</b><span data-i18n="tool_citta">Interactive Abhidhamma matrix of the 121 types of consciousness</span></a></li>
+        <li><a href="https://c3.buddha-dhamma.net/"><b>121 Citta: details</b><span data-i18n="tool_c3">Each citta with its feeling, root, function, door, object and base</span></a></li>
         <li><a href="https://cetasika.buddha-dhamma.net/"><b>52 Cetasika</b><span data-i18n="tool_cetasika">The 52 mental factors: interactive checklist</span></a></li>
         <li><a href="https://tabla.buddha-dhamma.net/"><b>Tika-mātikā</b><span data-i18n="tool_tabla">Table of the Abhidhamma triads (tika-mātikā)</span></a></li>
         <li><a href="https://abhidhana.buddha-dhamma.net/"><b>Pāḷi-Myanmā Abhidhāna</b><span data-i18n="tool_abhidhana">Tipiṭaka Pāḷi–Burmese dictionary</span></a></li>
       </ul>
     </nav>
+    <!-- PLAIN-TEXT PAGES, PILOT (2026-10-02): pipeline/build_static_pages.py.
+         The link is what lets a crawler reach site/t/; the sitemap alone is slower. -->
+    <div class="texts" data-i18n="texts_line"><a href="t/dn/">Dīghanikāya</a> as plain pages, one per sutta (pilot)</div>
     <div class="foot" data-i18n="land_foot">
       Tipiṭaka · Aṭṭhakathā · Ṭīkā — navigate from any canon paragraph to its commentary and
       subcommentary. Diacritic-insensitive search across the whole corpus.
