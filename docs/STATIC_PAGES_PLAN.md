@@ -7,7 +7,8 @@
 nav node (= one per sutta); sections from the node's kids become `<h2>`. Checked: every
 paragraph of 06Di01 (559), 07Di02 (444) and 08Di03 (360) appears exactly once. Variant markers
 use the reader's own FNM rule and are kept as `<sup>`, without the notes (1,013 markers, none
-left as bare digits). No commentary links yet. Linked from the landing page ("Dīghanikāya as plain pages").
+left as bare digits). Commentary links added 2026-10-02: under every paragraph, one link per
+aṭṭhakathā / ṭīkā volume from reader/linksk/<vol>.links.json ('direct' target preferred), into the reader. Linked from the landing page ("Dīghanikāya as plain pages").
 To extend: add a row to `NIKAYAS` in the script. Next decision after 2–3 weeks of Search Console data.
 
 ## Why

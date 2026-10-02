@@ -82,6 +82,24 @@ def render_text(t):
     return (('<span class="num">%s</span> ' % esc(lead)) if lead else '') + ''.join(out)
 
 
+def commentary_line(entry, vol_title):
+    """One link per commentary / subcommentary VOLUME the reader's link map
+    gives for this paragraph, in the map's order.  Within a volume, the
+    'direct' target is preferred (the edition's own paragraph number matches);
+    otherwise the first target, which is what the reader opens first too.
+    Nothing is inferred: no map entry, no line."""
+    out = []
+    for layer in ('commentary', 'subcommentary'):
+        seen = {}
+        for t in entry.get(layer) or []:
+            vol = t['key'].split('#')[0]
+            if vol not in seen or (t.get('state') == 'direct' and seen[vol].get('state') != 'direct'):
+                seen[vol] = t
+        for vol, t in seen.items():
+            out.append('<a href="/reader/reader2.html#%s" lang="pi">%s</a>' % (esc(t['key']), esc(vol_title.get(vol, vol))))
+    return ('<div class="cx" lang="en">→ ' + ' · '.join(out) + '</div>') if out else ''
+
+
 def clean_label(label):
     return re.sub(r'^\d+\.\s*', '', label).strip()
 
@@ -97,7 +115,9 @@ h1{font-size:28px;line-height:1.25;margin:0 0 4px}
 .tools{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 26px;font:14px system-ui,sans-serif}
 .tools a{color:var(--accent);border:1px solid var(--line);background:var(--card);border-radius:7px;padding:6px 12px;text-decoration:none}
 h2{font-size:19px;margin:30px 0 8px;color:var(--accent);font-weight:normal}
-p{margin:0 0 14px}
+p{margin:0 0 4px}
+.cx{font:12px/1.5 system-ui,sans-serif;color:var(--mut);margin:0 0 16px}.cx a{color:var(--accent);text-decoration:none}
+.cx a:hover{text-decoration:underline}
 .pg{font:11px system-ui,sans-serif;color:var(--mut);margin-right:6px;white-space:nowrap;border:1px solid var(--line);border-radius:4px;padding:0 4px}
 .pn{font:12px system-ui,sans-serif;color:var(--mut);text-decoration:none;margin-right:4px}
 .pager{display:flex;justify-content:space-between;gap:12px;margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font:14px system-ui,sans-serif}
@@ -141,8 +161,8 @@ def page_shell(title, desc, canon, crumbs, body, ld):
 <nav class="crumbs" aria-label="Breadcrumb">{crumb_html}</nav>
 {body}
 <div class="foot">Sixth Buddhist Council (Chaṭṭha Saṅgāyana) edition, romanised from the text published by the
-Ministry of Religious Affairs, Yangon (Pāḷi Series, 2008). Text as in the edition, without the variant apparatus;
-the <a href="/reader/reader2.html">reader</a> has the variants and the commentary links.
+Ministry of Religious Affairs, Yangon (Pāḷi Series, 2008). Text as in the edition, without the variant apparatus (in the <a href="/reader/reader2.html">reader</a>).
+The → links under each paragraph open its aṭṭhakathā and ṭīkā in the reader.
 A project of the Instituto de Estudios Buddhistas Hispano (IEBH) and BTHAR · <a href="/">buddha-dhamma.net</a></div>
 </div>
 </body>
@@ -159,6 +179,15 @@ def breadcrumb_ld(items):
 def build(write):
     nav = json.load(open(os.path.join(SITE, 'reader', 'nav.json'), encoding='utf-8'))
     canon_layer = next(L for L in nav['layers'] if L['layer'] == 'canon')
+    # COMMENTARY LINKS (2026-10-02).  Titles of the aṭṭhakathā / ṭīkā volumes,
+    # so each link names the work it opens.  A volume listed under several
+    # titles keeps its first.
+    vol_title = {}
+    for L in nav['layers']:
+        if L['layer'] in ('commentary', 'subcommentary'):
+            for nk2 in L['nikayas']:
+                for v2 in nk2['volumes']:
+                    vol_title.setdefault(v2['vol'], v2['title'])
     out_files = {}
     urls = []
     report = []
@@ -174,6 +203,8 @@ def build(write):
             data = json.load(open(os.path.join(SITE, vol + '.json'), encoding='utf-8'))
             paras = data['paragraphs']
             idx_by_key = {p['key']: i for i, p in enumerate(paras)}
+            lpath = os.path.join(SITE, 'reader', 'linksk', vol + '.links.json')
+            links = json.load(open(lpath, encoding='utf-8')) if os.path.exists(lpath) else {}
             tree = v['tree']
             for ti, node in enumerate(tree):
                 start = idx_by_key[node['key']]
@@ -185,7 +216,7 @@ def build(write):
                         sections.setdefault(k, clean_label(kid['label']))
                 suttas.append(dict(vol=vol, vtitle=v['title'], label=clean_label(node['label']),
                                    key=node['key'], paras=paras[start:end], start=start,
-                                   sections=sections))
+                                   sections=sections, links=links))
         for i, s in enumerate(suttas):
             s['num'] = i + 1
             s['file'] = '%02d-%s.html' % (s['num'], slug(s['label']))
@@ -213,6 +244,9 @@ def build(write):
                     pg = f"<span class=\"pg\" lang=\"en\" title=\"printed page where this paragraph begins\">p. {p['printed']}</span> "
                     last_pg = p['printed']
                 parts.append(f"<p id=\"p{p['n']}\">{pg}{render_text(p['text'])}</p>")
+                cx = commentary_line(s['links'].get(str(k), {}), vol_title)
+                if cx:
+                    parts.append(cx)
             parts.append('</main>')
             prev = suttas[i - 1] if i else None
             nxt = suttas[i + 1] if i + 1 < len(suttas) else None
