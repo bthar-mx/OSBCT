@@ -239,6 +239,13 @@ var S = {
                  es: 'Abrir este pasaje en el lector'},
   wl_nodict:    {en: 'No dictionary reached from this form.',
                  es: 'Ningún diccionario alcanzado desde esta forma.'},
+  wl_gram_term: {en: 'Grammatical term ↗', es: 'Término gramatical ↗'},
+  wl_gram_term_t:{en: 'In the IEBH glossary of grammatical terms (gramaticas.buddha-dhamma.net)',
+                 es: 'En el glosario de términos gramaticales del IEBH (gramaticas.buddha-dhamma.net)'},
+  wl_gram_root: {en: 'Root ↗', es: 'Raíz ↗'},
+  wl_gram_root_t:{en: 'Pali Roots in Saddanīti (U Sīlānanda), on gramaticas.buddha-dhamma.net',
+                 es: 'Pali Roots in Saddanīti (U Sīlānanda), en gramaticas.buddha-dhamma.net'},
+  wl_gram_form: {en: 'This form in DPD’s table:', es: 'Esta forma en la tabla de DPD:'},
   wl_tip_dpd:   {en: 'Digital Pāḷi Dictionary (Bodhirasa) — CC BY-NC-SA 4.0',
                  es: 'Digital Pāḷi Dictionary (Bodhirasa) — CC BY-NC-SA 4.0'},
   wl_tip_abhi:  {en: 'Tipiṭaka-Pāḷi-Myanmā-Abhidhāna (Ministry of Religious Affairs, Yangon) — the lexical authority (§9)',
@@ -876,6 +883,29 @@ function look(set, key) {
   });
 }
 // the evaluation store, same shard scheme, different manifest and directory
+// the whole shard a key falls in, for lookups that must scan its keys
+function eshard(set, key) {
+  if (!EVAL) return Promise.resolve(null);
+  return emanifest().then(function () {
+    var n = eShardName(set, key);
+    return n ? jfetch(EBASE + set + '/' + n + '.json', gzSet(EMAN, set)) : null;
+  });
+}
+// !!! DPD KEYS ITS HOMONYMS "ālapana 1", "ālapana 2" (IEBH, 2026-10-21: `ālapana`
+// showed no DPD entry though DPD has three).  When `form` does not know the
+// word, the word itself is asked as a headword -- and the bare lemma is no key.
+// So a miss on `h` takes every key of the shard that is `h` plus a number.
+function dpdHeads(h) {
+  return elook('dpd', h).then(function (e) {
+    if (e) return [{h: h, e: e}];
+    return eshard('dpd', h).then(function (o) {
+      if (!o) return [];
+      var re = new RegExp('^' + h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' \\d+(\\.\\d+)?$');
+      return Object.keys(o).filter(function (k) { return re.test(k) && o[k] && !o[k].big; })
+        .map(function (k) { return {h: k, e: o[k]}; });
+    });
+  });
+}
 function elook(set, key) {
   if (!EVAL) return Promise.resolve(null);
   return emanifest().then(function () {
@@ -1122,6 +1152,10 @@ var CSS = ''
 + '#wl .wl-abh a{color:var(--accent)}'
 + '#wl .wl-abh-draft,#wl .wl-abh-ok{font:600 10.5px Inter,system-ui,sans-serif;border-radius:999px;padding:1px 7px;white-space:nowrap}'
 + '#wl .wl-abh-draft{background:rgba(200,140,40,.18);color:var(--mut)}'
++ '#wl .wl-gramline{font:12px Inter,system-ui,sans-serif;margin:2px 0 4px;color:var(--mut)}'
++ '#wl a.wl-gram{color:inherit;text-decoration:underline dotted;text-underline-offset:2px}'
++ '#wl .wl-abh-gram:not(:empty){font:12px Inter,system-ui,sans-serif;margin:0 0 6px}'
++ '#wl td.wl-hit{outline:2px solid rgba(200,160,60,.75);outline-offset:-2px;background:rgba(200,160,60,.12)}'
 + '#wl .wl-abh-ok{background:rgba(60,150,90,.18);color:var(--mut)}'
   // the sharing terms: same weight as the attribution, but set apart so it
   // reads as a condition rather than a credit
@@ -1729,11 +1763,12 @@ function lookup(word, paraEl, inPanel) {
   // eval manifest is warmed with the edition's at pointerdown.  Four hops
   // now, three once the manifests are warm.  Nothing about WHAT is looked up
   // changed: the same sets, in the same order of authority.
+  gramIndex();
   var pEval = elook('form', word).then(function (fr) {
     if (!fr) fr = {h: [word], b: [word]};
     return Promise.all([
-      Promise.all((fr.h || []).map(function (h) {
-        return elook('dpd', h).then(function (e) { return {h: h, e: e}; }); })),
+      Promise.all((fr.h || []).map(dpdHeads)).then(function (ls) {
+        return [].concat.apply([], ls); }),
       Promise.all((fr.b || []).map(function (b) {
         return elook('lem', b).then(function (e) { return {b: b, e: e}; }); }))
     ]).then(function (z) {
@@ -2158,6 +2193,10 @@ function show(tab, d, keepGear) {
                  : tab === 'dpd'  ? viewDpd(d)
                  : viewDict(d);
   body.scrollTop = 0;
+  if (tab === 'dpd' || tab === 'abhi') {
+    if (GRAMIDX) gramDecorate(body, d);
+    else gramIndex().then(function () { if (current && current.word === d.word) gramDecorate(body, d); });
+  }
   // a gear change re-renders this tab; the popover reopens so several
   // sections can be chosen without reopening it each time
   if (keepGear) {
@@ -2509,6 +2548,105 @@ function famFill(div) {
       || ('<span class="wl-cite">' + esc(T('wl_fam_missing')) + '</span>');
   });
 }
+
+// LINKS INTO THE IEBH GRAMMARS (gramaticas.buddha-dhamma.net).
+//
+// That site sends no CORS header, so its own indexes cannot be read from here;
+// the reader ships `gram-index.json` (glossary lemmas and Saddanīti root names
+// -> anchors), generated from the gramaticas-pali-es repository by
+// _panel/build_gram_index.py.  Three kinds of link, all added to what DPD and
+// the Abhidhāna already draw, none replacing it:
+//   * "Grammatical term ↗" -- only when the clicked word, or a DPD headword,
+//     IS a glossary lemma (exact written form; no guessing from category);
+//   * "Root √… ↗" -- beside DPD's own Root line: Saddanīti's root of that
+//     name (bare, or with its marker vowel) and of DPD's gaṇa (gramRoots);
+//   * in DPD's declension tables, the cells holding the clicked form marked,
+//     with DPD's own label for them on the entry's line.  No link from a case
+//     name to the uses of the cases: a parsing names the case, not the use
+//     (IEBH, 2026-10-21).
+var GRAM = 'https://gramaticas.buddha-dhamma.net/recursos/';
+var GRAMIDX = null, GRAMP = null;
+function gramIndex() {
+  if (!GRAMP) GRAMP = jfetch('gram-index.json').then(function (g) { GRAMIDX = g || {g: {}, r: {}}; return GRAMIDX; })
+    .catch(function () { GRAMIDX = {g: {}, r: {}}; return GRAMIDX; });
+  return GRAMP;
+}
+function gramKey(s) {
+  s = String(s || '');
+  if (s.normalize) s = s.normalize('NFC');
+  return s.toLowerCase().replace(/ṁ/g, 'ṃ').replace(/[^0-9a-zāīūṅñṭḍṇḷṃ]/g, '');
+}
+function gramTermLink(w) {
+  var k = gramKey(String(w).replace(/\s+[\d.]+$/, '')), ids = GRAMIDX && GRAMIDX.g[k];
+  if (ids === 1) ids = [k];                 // the usual case: the anchor id is the lemma
+  if (!ids || !ids.length) return '';
+  return '<a class="wl-gram" target="_blank" rel="noopener" title="' + esc(T('wl_gram_term_t')) + '" href="'
+    + GRAM + 'glosario/#g-' + encodeURIComponent(ids[0]) + '">' + esc(T('wl_gram_term')) + '</a>';
+}
+// Saddanīti cites a root with its marker vowel (gamu, dhara, kara) where DPD
+// writes the bare root (gam, dhar, kar): the bare name first, then with a/i/u.
+// When DPD gives the group, only the roots of that gaṇa; if none is of it, all.
+function gramRoots(name, gana) {
+  var k = gramKey(name), R = (GRAMIDX && GRAMIDX.r) || {}, hit = [], n = '';
+  [k, k + 'a', k + 'i', k + 'u'].some(function (c) { if (R[c]) { hit = R[c]; n = c; return true; } return false; });
+  var out = hit.map(function (x) { return {id: x[0], g: x[1], es: x[2], en: x[3], n: n}; });
+  var same = gana ? out.filter(function (x) { return x.g.indexOf(gana) >= 0; }) : [];
+  return same.length ? same : out;
+}
+function gramCell(td) {
+  var t = td.innerHTML.split(/<br\s*\/?>/i).map(function (x) {
+    var e = document.createElement('i'); e.innerHTML = x; return gramKey(e.textContent); });
+  return t;
+}
+function gramDecorate(body, d) {
+  if (!GRAMIDX) return;
+  var me = gramKey(d.word);
+  // the Abhidhāna tab: only when the clicked word itself is a term
+  var top = body.querySelector('.wl-abh-gram');
+  if (top) top.innerHTML = gramTermLink(d.word);
+  Array.prototype.forEach.call(body.querySelectorAll('.wl-row'), function (row) {
+    var dpd = row.querySelector('.wl-dpd');
+    if (!dpd || row.dataset.gram) return;
+    row.dataset.gram = 1;
+    var bits = [];
+    var lem = row.querySelector('.wl-lem');
+    // a term only when the clicked word IS the headword (ālapana), not for
+    // every DPD lemma that happens to be one (dhammo → dhamma)
+    var tl = lem && gramKey(lem.textContent.replace(/\s+[\d.]+$/, '')) === me ? gramTermLink(lem.textContent) : '';
+    if (tl) bits.push(tl);
+    // Root: DPD's grammar table, th "Root", td "√dhar･1 a (hold…)" -- name,
+    // then DPD's root group (= the gaṇa, same order as Saddanīti's 1–8)
+    Array.prototype.forEach.call(dpd.querySelectorAll('table.grammar th'), function (th) {
+      if (th.textContent.trim() !== 'Root') return;
+      var td = th.nextElementSibling;
+      var m = td && /√\s*([a-zāīūṅñṭḍṇḷṃṁ]+)[^\d(]*(\d)?/i.exec(td.textContent);
+      if (!m) return;
+      var rs = gramRoots(m[1], m[2] ? +m[2] : 0);
+      if (!rs.length) return;
+      var lang = abhLang();
+      td.insertAdjacentHTML('beforeend', ' ' + rs.map(function (x, i) {
+        return '<a class="wl-gram" target="_blank" rel="noopener" title="' + esc(T('wl_gram_root_t'))
+          + ' — √' + esc(x.n) + ' (' + x.g.join(', ') + '): ' + esc(x[lang] || x.es) + '" href="'
+          + GRAM + 'raices/#r' + x.id + '">' + (i ? '' : esc(T('wl_gram_root')).replace(' ↗', ' '))
+          + '√' + esc(x.n) + (rs.length > 1 ? '<sup>' + (i + 1) + '</sup>' : '') + ' ↗</a>';
+      }).join(' '));
+    });
+    // declension tables: the clicked form marked
+    var hits = [];
+    Array.prototype.forEach.call(dpd.querySelectorAll('table.inflection tr'), function (tr) {
+      Array.prototype.forEach.call(tr.querySelectorAll('td[title]'), function (td) {
+        if (gramCell(td).indexOf(me) < 0) return;
+        td.classList.add('wl-hit');
+        var lab = td.getAttribute('title');
+        if (hits.some(function (h) { return h.lab === lab; })) return;
+        hits.push({lab: lab});
+      });
+    });
+    if (hits.length) bits.push('<span class="wl-cite">' + esc(T('wl_gram_form')) + '</span> '
+      + hits.map(function (h) { return '<b>' + esc(h.lab) + '</b>'; }).join(' · '));
+    if (bits.length) lem.insertAdjacentHTML('afterend', '<div class="wl-gramline">' + bits.join(' · ') + '</div>');
+  });
+}
 function viewDpd(d) {
   var h = evHead(T('wl_tip_dpd'), '', 'wl_cc_dpd');
   var e = (d.ev && d.ev.dpd) || [];
@@ -2527,7 +2665,8 @@ function viewDpd(d) {
 
 function viewAbhi(d) {
   var abh = (d.ev && d.ev.abh) || [], seg = d.ev && d.ev.abhSeg;
-  var h = evHead(T('wl_abh_src'), '', 'wl_dhamma', true);   // §9: the authority
+  var h = evHead(T('wl_abh_src'), '', 'wl_dhamma', true)    // §9: the authority
+        + '<div class="wl-abh-gram"></div>';
   // IEBH's edition first
   abh.forEach(function (e) { h += abhEntryHtml(e, abh.length > 1); });
   if (!abh.length && seg) {
