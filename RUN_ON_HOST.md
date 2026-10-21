@@ -1,3 +1,42 @@
+# Run on the host — 2026-10-21: v2.11.0 (word pane: Sandhi button; release)
+
+In this order — upload BEFORE push, tag AFTER the live check:
+
+```bash
+cd ~/Documents/OSBCT
+./pipeline/r2_upload.sh      # rclone: stores/lookup_eval/solver/ is new (31 .json.gz + indice.json +
+                             # index.json, 4.0 MB) — the Sandhi button's lexicon. Nothing else changes.
+git push                     # v2.11.0: three-file bump, stamp 843c7dae61bd, panel.js?v=20261021e
+```
+
+Live checks, cache-busted, after Pages has had its minutes:
+
+```
+https://buddha-dhamma.net/build.json?cb=…                      -> {"build": "843c7dae61bd", "date": "2026-10-21"}
+footer of every page                                            -> v2.11.0
+https://dict.buddha-dhamma.net/lookup_eval/solver/index.json    -> "engine_version": "2.4", "commit": "54e2cbe…"
+reader: click yathāha (or any word) -> "Sandhi ▸" under the header -> press it:
+   "IEBH solver: sandhi signalled · possible readings", yathā + āha §10 §12 §11 · decided by IEBH first
+python3 pipeline/verify_live.py                                 (now also compares reader/sandhi-solver.js)
+```
+
+Only when that says LIVE SITE MATCHES:
+
+```bash
+git tag v2.11.0 && git push origin v2.11.0
+```
+
+Then on GitHub: Releases → Draft a new release → tag `v2.11.0` → title
+`v2.11.0 — the reader's word pane, and the Dīghanikāya as plain pages` → body from
+`docs/RELEASE_NOTES_v2.11.0.md` → Publish. Zenodo mints the DOI from the published release; read it
+FROM THE RECORD and add it to CITATION.cff (identifiers) and the README "How to cite" list.
+
+Before depositing, decide (not changed here): `stores/lookup_eval/` is tracked, so the Zenodo archive
+carries DPD material (CC BY-NC-SA) and the ⚙ dictionaries (DOP is under copyright) — as v2.10.1's did —
+and now the solver's lexicon and engine (CC BY-NC-ND, IEBH / BTHAR), under a deposit marked CC BY 4.0.
+
+---
+
 # Run on the host — 2026-09-09: E078 applied, v2.10.1
 
 Four commands, in this order — upload BEFORE push, tag AFTER push:

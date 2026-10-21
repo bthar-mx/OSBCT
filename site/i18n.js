@@ -191,7 +191,7 @@ window.osbctSetLang=function(l){ localStorage.setItem('osbct-lang',l); location.
 // where that drift becomes visible instead of silent.  BUMPING THIS LINE
 // IS PART OF TAGGING, beside CITATION.cff and .zenodo.json (the checklist
 // there names this file now).
-window.OSBCT_VERSION='v2.10.1';
+window.OSBCT_VERSION='v2.11.0';
 document.addEventListener('DOMContentLoaded',function(){
   var els=document.querySelectorAll('.sitever');
   for(var i=0;i<els.length;i++) els[i].textContent=window.OSBCT_VERSION;
