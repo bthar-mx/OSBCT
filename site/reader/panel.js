@@ -313,6 +313,20 @@ var S = {
   wl_en_attr:   {en: 'PEU’s English rendering of this entry. A translation, not the authority: where they differ, the Abhidhāna governs.',
                  es: 'La versión inglesa del PEU de esta entrada. Una traducción, no la autoridad: donde difieran, gobierna el Abhidhāna.'},
   wl_back:      {en: 'Back', es: 'Atrás'},
+  wl_abh_src:   {en: 'Tipiṭaka Pāḷi-Myanmā Abhidhāna, romanised and translated by IEBH (abhidhana.buddha-dhamma.net)',
+                 es: 'Tipiṭaka Pāḷi-Myanmā Abhidhāna, romanizado y traducido por el IEBH (abhidhana.buddha-dhamma.net)'},
+  wl_abh_draft: {en: 'draft · machine translation from the Burmese, not yet reviewed',
+                 es: 'borrador · traducción automática del birmano, sin revisar'},
+  wl_abh_rev:   {en: 'reviewed', es: 'revisado'},
+  wl_abh_ocr:   {en: 'OCR, not proofread', es: 'OCR sin revisar'},
+  wl_abh_open:  {en: 'Open in the Abhidhāna ↗', es: 'Abrir en el Abhidhāna ↗'},
+  wl_abh_my:    {en: 'Burmese text ⇣', es: 'Texto birmano ⇣'},
+  wl_abh_cites: {en: 'Citations:', es: 'Citas:'},
+  wl_abh_seg:   {en: 'Not in the Abhidhāna as a whole word. Longest headword it begins with:',
+                 es: 'La palabra entera no está en el Abhidhāna. Entrada más larga con que empieza:'},
+  wl_abh_rest:  {en: 'rest', es: 'resto'},
+  wl_abh_pm:    {en: 'Earlier digitisation (Burmese only)', es: 'Digitalización anterior (solo birmano)'},
+  wl_about:     {en: 'source and notices', es: 'fuente y avisos'},
   wl_noentry:   {en: 'No entry for the resolved lemma(s).',
                  es: 'Ninguna entrada para el lema resuelto.'},
   wl_thisvol:   {en: 'this volume', es: 'este volumen'},
@@ -1102,6 +1116,13 @@ var CSS = ''
 + '#wl .wl-cite a.wl-go{color:inherit;text-decoration:none;border-bottom:1px dotted currentColor}'
 + '#wl .wl-cite a.wl-go:hover{color:var(--acc,inherit);border-bottom-style:solid}'
 + '#wl .wl-src{font-size:11px;color:var(--mut);margin:0 0 8px}'
++ '#wl details.wl-about summary{cursor:pointer;list-style:none}'
++ '#wl details.wl-about summary::-webkit-details-marker{display:none}'
++ '#wl .wl-abh-def{margin:4px 0}'
++ '#wl .wl-abh a{color:var(--accent)}'
++ '#wl .wl-abh-draft,#wl .wl-abh-ok{font:600 10.5px Inter,system-ui,sans-serif;border-radius:999px;padding:1px 7px;white-space:nowrap}'
++ '#wl .wl-abh-draft{background:rgba(200,140,40,.18);color:var(--mut)}'
++ '#wl .wl-abh-ok{background:rgba(60,150,90,.18);color:var(--mut)}'
   // the sharing terms: same weight as the attribution, but set apart so it
   // reads as a condition rather than a credit
   // opacity:.9 used to sit on top of --mut and compounded the contrast problem
@@ -1480,6 +1501,13 @@ function layout() {
   document.body.classList.toggle('wl-side', side);
   document.body.classList.toggle('wl-sheet', !side);
 }
+// Esc closes the pane, unless the reader is typing in a field
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape' || !el || !el.classList.contains('open')) return;
+  var a = document.activeElement;
+  if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable)) return;
+  close();
+});
 function close() {
   el.classList.remove('open');
   document.body.classList.remove('wl-open');
@@ -1723,6 +1751,15 @@ function lookup(word, paraEl, inPanel) {
       if (v) ev.lem.push({b: (v.w && v.w[0]) || word, e: v});
       return ev;
     });
+  }).then(function (ev) {
+    // IEBH's Abhidhāna by the word itself and by every lemma resolved above;
+    // if none, the longest headword the word begins with (see abhSegment)
+    var hws = [word].concat(ev.lem.map(function (L) { return L.b; }));
+    return abhEntries(hws).then(function (es) {
+      ev.abh = es;
+      if (es.length) return ev;
+      return abhSegment(word).then(function (seg) { ev.abhSeg = seg; return ev; });
+    }).catch(function () { ev.abh = []; return ev; });
   });
   Promise.all([look('freq', word), look('gloss', word), look('forms', word),
                vo ? loadLinks(vo.vol) : Promise.resolve(null),
@@ -1804,6 +1841,130 @@ var DICT_SECTIONS = [
   // first, and with the flag off it is not in the build at all.
 ];
 
+// ----------------------------------------- the Abhidhāna, from IEBH's edition --
+// !!! THE ABHIDHĀNA TAB IS FED FROM abhidhana.buddha-dhamma.net (IEBH,
+// 2026-10-21): IEBH's own digitisation of the same dictionary -- romanised
+// headword, label, analysis, Spanish and English renderings with their review
+// status, volume and page -- instead of the Burmese-only pm12e rows, which stay
+// behind a reveal as the fallback.  That site is static: data/nav.json lists
+// the 40 initials in Pāḷi order, data/s/<initial index>.json is every headword
+// of that initial as [slug, roman, burmese, book, pdf page, chunk], and
+// data/c/<chunk>.json holds the entries.  Both editions write niggahīta as ṁ.
+// Fetched in parallel with the evaluation store; a miss costs two small files.
+var ABH = 'https://abhidhana.buddha-dhamma.net/';
+var abhNavP = null, abhShardP = {}, abhChunkP = {}, ABH_LABELS = {};
+function abhJson(path) {
+  return fetch(ABH + 'data/' + path)
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .catch(function () { return null; });
+}
+function abhCanon(w) {
+  w = String(w || '');
+  if (w.normalize) w = w.normalize('NFC');
+  return w.toLowerCase().replace(/ṃ/g, 'ṁ');
+}
+function abhLetters() {
+  if (!abhNavP) abhNavP = Promise.all([abhJson('nav.json'), abhJson('labels.json')])
+    .then(function (z) {
+      (z[1] || []).forEach(function (l) { ABH_LABELS[l.label] = l; });
+      return ((z[0] && z[0].letters) || []).map(function (l) { return l.ro; });
+    });
+  return abhNavP;
+}
+function abhShard(w) {
+  return abhLetters().then(function (L) {
+    var idx = -1, len = 0;
+    L.forEach(function (ro, i) {
+      if (w.indexOf(ro) === 0 && ro.length > len) { idx = i; len = ro.length; } });
+    if (idx < 0) return [];
+    return abhShardP[idx] || (abhShardP[idx] = abhJson('s/' + idx + '.json')
+      .then(function (r) { return r || []; }));
+  });
+}
+function abhRows(rows) {
+  var chunks = {}, slugs = {};
+  rows.forEach(function (r) { chunks[r[5]] = 1; slugs[r[0]] = 1; });
+  return Promise.all(Object.keys(chunks).map(function (c) {
+    return abhChunkP[c] || (abhChunkP[c] = abhJson('c/' + c + '.json'));
+  })).then(function (cs) {
+    var out = [];
+    cs.forEach(function (c) { (c || []).forEach(function (e) { if (slugs[e.sl]) out.push(e); }); });
+    return out;
+  });
+}
+// every entry whose headword is one of `hws`, once each, in the order asked
+function abhEntries(hws) {
+  var seen = {}, want = [];
+  hws.forEach(function (h) { h = abhCanon(h); if (h && !seen[h]) { seen[h] = 1; want.push(h); } });
+  return Promise.all(want.map(function (h) {
+    return abhShard(h).then(function (rows) {
+      return abhRows(rows.filter(function (r) { return abhCanon(r[1]) === h; }));
+    });
+  })).then(function (lists) {
+    var got = {}, out = [];
+    lists.forEach(function (l) { l.forEach(function (e) { if (!got[e.i]) { got[e.i] = 1; out.push(e); } }); });
+    return out;
+  });
+}
+// a word the Abhidhāna lacks whole (a commentarial compound): the longest
+// headword it begins with, at least three letters, as Padakosa does.  Offered
+// as a segment, never as the analysis of the word.
+function abhSegment(word) {
+  var w = abhCanon(word);
+  return abhShard(w).then(function (rows) {
+    var best = '';
+    rows.forEach(function (r) {
+      var h = abhCanon(r[1]);
+      if (h.length >= 3 && h.length <= w.length - 2 && h.length > best.length && w.indexOf(h) === 0) best = h;
+    });
+    if (!best) return null;
+    return abhEntries([best]).then(function (es) {
+      return es.length ? {head: best, rest: w.slice(best.length), entries: es} : null;
+    });
+  });
+}
+function abhLang() {
+  var l = 'en';
+  try { l = localStorage.getItem('osbct-lang') || document.documentElement.lang || 'en'; } catch (e) {}
+  return String(l).slice(0, 2) === 'es' ? 'es' : 'en';
+}
+function abhEntryHtml(e, many) {
+  var lang = abhLang();
+  var tr = e.t && (e.t[lang] || e.t.en || e.t.es);
+  // a label may be two (ပု၊န = masculine or neuter noun): each one named
+  var labTxt = String(e.l || '').split('၊').map(function (x) {
+    var lab = ABH_LABELS[x.trim()] || ABH_LABELS[e.l];
+    return lab ? (lab[lang] || lab.en || lab.pali) : x;
+  }).filter(Boolean).join(' / ');
+  var st = tr && tr.s;
+  var badge = !tr ? ''
+    : (st === 'reviewed' || st === 'corrected')
+      ? ' <span class="wl-abh-ok">' + esc(T('wl_abh_rev')) + '</span>'
+      : ' <span class="wl-abh-draft">' + esc(T('wl_abh_draft')) + '</span>';
+  var cites = e.ci || [];
+  return '<div class="wl-row wl-abh">'
+    + '<div><span class="wl-lem wl-g">' + esc(e.r) + '</span>'
+    + (many && e.hn ? '<sup class="wl-cite">' + esc(e.hn) + '</sup>' : '')
+    + ' <span class="wl-my">' + esc(e.h || '') + '</span>'
+    + (labTxt ? ' <span class="wl-cite">' + esc(labTxt) + '</span>' : '') + '</div>'
+    + (e.ai ? '<div class="wl-etym"><span class="wl-cite">[' + esc(e.ai) + ']</span></div>' : '')
+    + (tr && tr.x ? '<div class="wl-abh-def">' + esc(tr.x).replace(/\*([^*]+)\*/g, '<i>$1</i>')
+                    // [[phusati|phusati]] is a cross-reference: a button that looks it up
+                    .replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, function (m, w, label) {
+                      return '<button type="button" class="wl-sib" data-w="' + w + '">' + (label || w) + '</button>'; })
+                    + badge + '</div>' : '')
+    + (cites.length
+       ? '<div class="wl-cites">' + esc(T('wl_abh_cites')) + ' ' + cites.slice(0, 8).map(esc).join(' · ')
+         + (cites.length > 8 ? ' … (' + cites.length + ')' : '') + '</div>' : '')
+    + '<div class="wl-cite">vol. ' + esc(e.k) + ' · p. ' + esc(e.q)
+    + (e.s === 'ocr' ? ' · ' + esc(T('wl_abh_ocr')) : '')
+    + ' · <a href="' + ABH + 'w/' + encodeURIComponent(e.sl) + '" target="_blank" rel="noopener">'
+    + esc(T('wl_abh_open')) + '</a></div>'
+    + (e.b ? '<button class="wl-reveal">' + esc(T('wl_abh_my')) + '</button>'
+             + '<div class="wl-inline wl-hidden"><div class="wl-my">' + esc(e.b) + '</div></div>' : '')
+    + '</div>';
+}
+
 function tabBtn(id, label, n, dis, tip) {
   // no `disabled` attribute: it swallows hover events, and the tooltip with
   // them, in Safari.  A class + aria-disabled + a click guard instead.
@@ -1848,7 +2009,8 @@ function render(d) {
     return n;
   }
   d.n.dpd = (d.ev && d.ev.dpd) ? d.ev.dpd.length : 0;
-  d.n.abhi = count('a', true);
+  d.n.abhi = (d.ev && d.ev.abh && d.ev.abh.length) || count('a', true)
+           || (d.ev && d.ev.abhSeg ? 1 : 0);
   d.n.peu = count('p', false);
   // APD: one section per dictionary the manifest knows about.  Nothing here is
   // named in this file -- if the build adds a dictionary, the panel shows it.
@@ -1937,9 +2099,12 @@ function render(d) {
   // With the flag OFF this is the publishable panel, there IS no DPD, and the
   // edition is first because it is the only voice there is. So §9's guarantee
   // is kept exactly where it applies, and the gate asserts it there.
+  // !!! THE ABHIDHĀNA FIRST (IEBH, 2026-10-21).  The comparison surface had
+  // DPD first by the reader's earlier preference; §9 makes the Abhidhāna the
+  // authority, and the tab now carries IEBH's own Spanish and English.
   var html = EVAL
-    ? tabBtn('dpd',  T('wl_dpd'),  d.n.dpd || null, !d.n.dpd, T('wl_tip_dpd'))
-      + tabBtn('abhi', T('wl_abhi'), d.n.abhi || null, !d.n.abhi, T('wl_tip_abhi'))
+    ? tabBtn('abhi', T('wl_abhi'), d.n.abhi || null, !d.n.abhi, T('wl_tip_abhi'))
+      + tabBtn('dpd',  T('wl_dpd'),  d.n.dpd || null, !d.n.dpd, T('wl_tip_dpd'))
       + tabBtn('dict', T('wl_dict'), nDict || null, !nDict, T('wl_tip_dict'))
       + tabBtn('ed',   T('wl_edition'), d.nGloss || null, !d.nGloss, T('wl_tip_ed'))
     : tabBtn('ed',   T('wl_edition'), d.nGloss || null, !d.nGloss, T('wl_tip_ed'))
@@ -1951,7 +2116,7 @@ function render(d) {
   });
   // Edition is the default tab, always — never a dictionary (§9)
   var first = EVAL
-    ? (d.n.dpd ? 'dpd' : d.n.abhi ? 'abhi' : nDict ? 'dict' : 'ed')
+    ? (d.n.abhi ? 'abhi' : d.n.dpd ? 'dpd' : nDict ? 'dict' : 'ed')
     : (d.nGloss ? 'ed' : nDict ? 'dict' : 'ed');
   show(first, d);
   keepWordVisible();
@@ -1978,6 +2143,14 @@ function render(d) {
 // exist: see gate_reader.py assertion 12.
 function show(tab, d, keepGear) {
   var tabs = document.getElementById('wlt'), body = document.getElementById('wlb');
+  setTimeout(function () {         // the Abhidhāna segment's rest: look it up
+    Array.prototype.forEach.call(body.querySelectorAll('.wl-sib[data-w]'), function (b) {
+      b.addEventListener('click', function () {
+        HIST.push({word: d.word, para: d.para}); updateBack();
+        lookup(b.dataset.w, d.para, true);
+      });
+    });
+  }, 0);
   Array.prototype.forEach.call(tabs.querySelectorAll('button'), function (b) {
     b.setAttribute('aria-selected', b.dataset.tab === tab ? 'true' : 'false'); });
   body.innerHTML = tab === 'ed'   ? viewEd(d)
@@ -2273,11 +2446,15 @@ function rich(x) {
 // text and the wrong thing to say about the tradition's own glosses.  Reader's
 // instruction, 2026-08-03.  Its attribution and rights lines stay: those are
 // §9's other obligation and are not in question.
+// !!! ONE LINE BEFORE THE DEFINITION, NOT FOUR (IEBH, 2026-10-21).  The
+// source stays named on screen -- attribution is an obligation -- and the
+// banner and the rights open from it.
 function evHead(srcLine, extra, rights, authority) {
-  return (authority ? '' : '<div class="wl-banner">' + esc(T('wl_eval')) + '</div>')
-       + '<div class="wl-src">' + esc(srcLine) + (extra ? ' ' + esc(extra) : '')
-       + '</div>'
-       + (rights ? '<div class="wl-rights">' + esc(T(rights)) + '</div>' : '');
+  return '<details class="wl-about"><summary class="wl-src">' + esc(srcLine)
+       + (extra ? ' ' + esc(extra) : '') + ' · <span class="wl-cite">ⓘ ' + esc(T('wl_about')) + '</span></summary>'
+       + (authority ? '' : '<div class="wl-banner">' + esc(T('wl_eval')) + '</div>')
+       + (rights ? '<div class="wl-rights">' + esc(T(rights)) + '</div>' : '')
+       + '</details>';
 }
 
 // !!! DPD SHIPS THREE OF ITS SIX BLOCKS EMPTY (2026-08-09, user-reported:
@@ -2349,8 +2526,19 @@ function viewDpd(d) {
 }
 
 function viewAbhi(d) {
-  var h = evHead(T('wl_tip_abhi'), '', 'wl_dhamma', true);   // §9: the authority
-  var i = 0;
+  var abh = (d.ev && d.ev.abh) || [], seg = d.ev && d.ev.abhSeg;
+  var h = evHead(T('wl_abh_src'), '', 'wl_dhamma', true);   // §9: the authority
+  // IEBH's edition first
+  abh.forEach(function (e) { h += abhEntryHtml(e, abh.length > 1); });
+  if (!abh.length && seg) {
+    h += '<p class="wl-cite">' + esc(T('wl_abh_seg')) + ' <b class="wl-g">' + esc(seg.head)
+       + '</b> + ' + (seg.rest ? '<button type="button" class="wl-sib" data-w="' + esc(seg.rest) + '">'
+       + esc(seg.rest) + '</button> <span class="wl-cite">(' + esc(T('wl_abh_rest')) + ')</span>' : '') + '</p>';
+    seg.entries.forEach(function (e) { h += abhEntryHtml(e, seg.entries.length > 1); });
+  }
+  // the earlier, Burmese-only digitisation (pm12e): shown when IEBH has
+  // nothing, folded under a reveal when it has
+  var pm = '', i = 0;
   ((d.ev && d.ev.lem) || []).forEach(function (L) {
     (L.e.a || []).forEach(function (row) {
       i++;
@@ -2358,7 +2546,7 @@ function viewAbhi(d) {
       //        Burmese definition, [transcoded citations]]
       var myhead = row[0], myetym = row[1], rometym = row[2],
           mydef = row[3], cites = row[4] || [];
-      h += '<div class="wl-row"><span class="wl-cite">' + i + '. </span>'
+      pm += '<div class="wl-row"><span class="wl-cite">' + i + '. </span>'
          + '<span class="wl-lem wl-g">' + esc(L.b) + '</span> '
          + '<span class="wl-my">' + rich(myhead) + '</span>'
          + ((myetym || rometym)
@@ -2372,14 +2560,21 @@ function viewAbhi(d) {
               + ' <span class="wl-cite">' + esc(T('wl_cites_note')) + '</span></div>'
             : '');
       if (L.e.p) {
-        h += '<button class="wl-reveal">' + esc(T('wl_en_btn')) + '</button>'
+        pm += '<button class="wl-reveal">' + esc(T('wl_en_btn')) + '</button>'
            + '<div class="wl-inline wl-hidden"><div class="wl-src">'
            + esc(L.e.pm ? T('wl_mt') : T('wl_en_attr')) + '</div>' + L.e.p + '</div>';
       }
-      h += '</div>';
+      pm += '</div>';
     });
   });
-  if (!i) h += '<p class="wl-none">' + esc(T('wl_noentry')) + '</p>';
+  if (pm) {
+    if (abh.length || seg)
+      h += '<button class="wl-reveal">' + esc(T('wl_abh_pm')) + ' ⇣</button>'
+         + '<div class="wl-inline wl-hidden"><div class="wl-src">' + esc(T('wl_tip_abhi')) + '</div>' + pm + '</div>';
+    else
+      h += '<div class="wl-src">' + esc(T('wl_tip_abhi')) + '</div>' + pm;
+  }
+  if (!abh.length && !seg && !i) h += '<p class="wl-none">' + esc(T('wl_noentry')) + '</p>';
   return h;
 }
 
