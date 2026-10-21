@@ -239,6 +239,19 @@ var S = {
                  es: 'Abrir este pasaje en el lector'},
   wl_nodict:    {en: 'No dictionary reached from this form.',
                  es: 'Ningún diccionario alcanzado desde esta forma.'},
+  wl_sd_iebh:   {en: 'Sandhi (IEBH):', es: 'Sandhi (IEBH):'},
+  wl_sd_dpd:    {en: 'DPD’s split — unverified:', es: 'División del DPD — sin verificar:'},
+  wl_sd_dpd_t:  {en: 'Digital Pāḷi Dictionary’s automatic deconstruction. Not checked by IEBH’s grammar (§9).',
+                 es: 'Descomposición automática del Digital Pāḷi Dictionary. No comprobada con la gramática del IEBH (§9).'},
+  wl_sd_auto:   {en: 'IEBH solver: %d automatic proposals, not verified',
+                 es: 'Solucionador del IEBH: %d propuestas automáticas, sin verificar'},
+  wl_sd_auto_t: {en: 'Each recomposes the form by Kaccāyana’s rules; none is attested as the reading of the text.',
+                 es: 'Cada una recompone la forma por las reglas de Kaccāyana; ninguna está atestiguada como la lectura del texto.'},
+  wl_sd_k_adjudicated: {en: 'decided by IEBH', es: 'decidido por el IEBH'},
+  wl_sd_k_signed: {en: 'signed', es: 'firmado'},
+  wl_sd_k_bank: {en: 'Nandisena’s bank', es: 'banco de Nandisena'},
+  wl_sd_k_pattern: {en: 'IEBH pattern', es: 'pauta del IEBH'},
+  wl_sd_sutta:  {en: 'Kaccāyana §%d (gramaticas.buddha-dhamma.net)', es: 'Kaccāyana §%d (gramaticas.buddha-dhamma.net)'},
   wl_gram_term: {en: 'Grammatical term ↗', es: 'Término gramatical ↗'},
   wl_gram_term_t:{en: 'In the IEBH glossary of grammatical terms (gramaticas.buddha-dhamma.net)',
                  es: 'En el glosario de términos gramaticales del IEBH (gramaticas.buddha-dhamma.net)'},
@@ -1212,6 +1225,7 @@ var CSS = ''
 + 'padding:3px 7px;cursor:pointer}'
 + '#wl .wl-pfx:hover{border-color:var(--accent);color:var(--accent)}'
 + '#wl .wl-sibs{margin-top:5px;display:flex;flex-wrap:wrap;gap:5px;align-items:baseline}'
++ '#wl .wl-sd{margin-top:5px;font-size:13px}#wl details.wl-sd summary{cursor:pointer}#wl .wl-sd a{color:inherit}'
 + '#wl .wl-sib{font:400 12.5px/1.3 Inter,system-ui,sans-serif;color:var(--fg);'
 + 'background:none;border:1px solid var(--line);border-radius:6px;'
 + 'padding:2px 6px;cursor:pointer}'
@@ -1798,10 +1812,10 @@ function lookup(word, paraEl, inPanel) {
   });
   Promise.all([look('freq', word), look('gloss', word), look('forms', word),
                vo ? loadLinks(vo.vol) : Promise.resolve(null),
-               siblings(word)])
+               siblings(word), sandhiOf(word)])
     .then(function (res) {
       if (!current || current.word !== word) return;   // superseded by a later click
-      var freq = res[0], gl = res[1], forms = res[2], sibs = res[4];
+      var freq = res[0], gl = res[1], forms = res[2], sibs = res[4], sd = res[5];
       var linked = vo ? linkedKeys(res[3], vo.ord) : {};
       // A high-frequency form's rows do not fit in a shard (`tattha` alone has
       // 718): the shard carries only the count and the rows live in paged
@@ -1838,7 +1852,7 @@ function lookup(word, paraEl, inPanel) {
         // arrives after the render silently leaves every citation plain.
         return loadOrds(rows).then(function () {
         render({word: word, para: paraEl, freq: freq, rows: rows,
-                linked: linked, ev: ev, sibs: sibs,
+                linked: linked, ev: ev, sibs: sibs, sd: sd,
                 big: !!big, page: page0 ? page0.page : null,
                 pages: page0 ? page0.pages : null, nGloss: nGloss,
                 ped: ped.filter(function (p) { return p.e; })});
@@ -2024,7 +2038,8 @@ function render(d) {
              return '<button type="button" class="wl-sib" data-w="' + esc(s.w) + '">'
                   + esc(s.w) + ' <span class="wl-cite">' + s.n + '</span></button>';
            }).join(' ') + '</div>'
-       : '');
+       : '')
+    + sandhiHtml(d.sd);
   Array.prototype.forEach.call(
     document.getElementById('wlc').querySelectorAll('.wl-sib'), function (b) {
       b.addEventListener('click', function () {
@@ -2547,6 +2562,70 @@ function famFill(div) {
     div.innerHTML = html
       || ('<span class="wl-cite">' + esc(T('wl_fam_missing')) + '</span>');
   });
+}
+
+// SANDHI: WHAT IS KNOWN ABOUT THE JUNCTURES OF A FORM DPD HAS NO ENTRY FOR.
+//
+// `lookup/sandhi/` (built by _panel/build_sandhi.py, its own manifest) holds,
+// per corpus form with no DPD headword: the IEBH solver's readings of the
+// strong kinds (decided by IEBH, signed, from Nandisena's bank, an IEBH
+// pattern), its automatic proposals when it signals sandhi, and DPD's own
+// split.  Order of authority (IEBH, 2026-10-21): an IEBH reading first; when
+// there is none, DPD's split, labelled as DPD's and unverified (§9); the
+// automatic proposals always folded, because each recomposes the form by rule
+// and none is attested as what the text reads.
+var SMANP = null;
+function smanifest() {
+  if (!SMANP) SMANP = jfetch(BASE + 'sandhi/index.json').catch(function () { return null; });
+  return SMANP;
+}
+function sandhiOf(word) {
+  return smanifest().then(function (m) {
+    if (!m || !m.shards) return null;
+    var f = fold(word), name = null;
+    for (var d = 2; d <= 40 && !name; d++) {
+      var n = (f.slice(0, d) + new Array(d + 1).join('_')).slice(0, d);
+      if (m.shards[n]) name = n;
+    }
+    if (!name) return null;
+    return jfetch(BASE + 'sandhi/' + name + '.json').then(function (o) {
+      if (!o) return null;
+      var w = niggCanon(word);
+      return o[w] || o[w.toLowerCase()] || null;
+    });
+  }).catch(function () { return null; });
+}
+function sdParts(cs) {
+  return cs.map(function (c) {
+    return '<button type="button" class="wl-sib" data-w="' + esc(c) + '">' + esc(c) + '</button>';
+  }).join(' + ');
+}
+function sdSuttas(ns) {
+  return ns.map(function (n) {
+    return '<a href="https://gramaticas.buddha-dhamma.net/s/' + n + '/" target="_blank" rel="noopener" title="'
+      + esc(T('wl_sd_sutta').replace('%d', n)) + '">§' + n + '</a>';
+  }).join(' ');
+}
+function sandhiHtml(sd) {
+  if (!sd) return '';
+  var h = '';
+  if (sd.i && sd.i.length) {
+    sd.i.slice(0, 2).forEach(function (x) {
+      h += '<div class="wl-sd"><span class="wl-cite">' + esc(T('wl_sd_iebh')) + '</span> ' + sdParts(x[0])
+        + ' <span class="wl-cite" title="' + esc((x[4] || []).join(' → ')) + '">' + sdSuttas(x[1])
+        + ' · ' + esc(T('wl_sd_k_' + x[2])) + '</span></div>';
+    });
+  } else if (sd.d && sd.d.length) {
+    h += '<div class="wl-sd"><span class="wl-cite" title="' + esc(T('wl_sd_dpd_t')) + '">' + esc(T('wl_sd_dpd'))
+      + '</span> ' + sdParts(sd.d[0].split(' + '))
+      + (sd.d.length > 1 ? ' <span class="wl-cite">(' + sd.d.slice(1).map(esc).join('; ') + ')</span>' : '') + '</div>';
+  }
+  if (sd.a && sd.a.length)
+    h += '<details class="wl-sd"><summary class="wl-cite" title="' + esc(T('wl_sd_auto_t')) + '">'
+      + esc(T('wl_sd_auto').replace('%d', sd.an || sd.a.length)) + '</summary>'
+      + sd.a.map(function (x) { return '<div>' + sdParts(x[0]) + ' <span class="wl-cite">' + sdSuttas(x[1]) + '</span></div>'; }).join('')
+      + '</details>';
+  return h;
 }
 
 // LINKS INTO THE IEBH GRAMMARS (gramaticas.buddha-dhamma.net).
