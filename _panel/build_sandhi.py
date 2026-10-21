@@ -1,4 +1,4 @@
-"""Build stores/lookup/sandhi/: what is known about the junctures of corpus forms DPD has no entry for.
+"""Build stores/lookup_eval/sandhi/: what is known about the junctures of corpus forms DPD has no entry for.
 
 Shared by the reader pane (site/reader/panel.js) and Padakosa. One record per form of the Sixth Council
 corpus that has no DPD headword (DPD v0.4.20260926 `lookup.headwords` empty), keyed on the form as the
@@ -16,13 +16,17 @@ Solver: bthar-mx/gramaticas-pali-es (commit in sandhi/index.json), nuestro/soluc
 site's mode (SOLO_CANON: the lexicon is the Sixth Council corpus; DPD takes no part). §9 of the OSBCT norms:
 DPD's split is shown only labelled as DPD's and unverified.
 
+It goes in the EVALUATION store, not in stores/lookup/: a record may carry DPD's split, and stores/lookup/
+holds no DPD (see .gitignore). Same convention as dpd/, family/ and hw/: each shard is written as .json.gz
+(tracked, served, sniffed by the panel) and as .json (kept on disk, ignored); the manifest lists `gz`.
+
 Sharding as build_lookup.py: a key sits in the shard named by the shortest prefix of fold(key), padded
 with '_', that the manifest lists (depth 2 up); shards are split until under the cap. The manifest is
-sandhi/index.json, separate from lookup/index.json (which build_lookup.py rewrites whole).
+sandhi/index.json, separate from lookup_eval/index.json (which build_eval.py rewrites whole).
 
     python3 build_sandhi.py SOLVED_DIR DPD_DB CORPUS_FORMAS_JSON OUT_DIR GRAM_COMMIT DPD_VERSION
 """
-import glob, json, os, re, sqlite3, sys
+import glob, gzip, json, os, re, sqlite3, sys
 
 CAP = 150000
 F = {"ā": "a", "ī": "i", "ū": "u", "ṁ": "m", "ṃ": "m", "ṅ": "n", "ñ": "n", "ṭ": "t", "ḍ": "d", "ṇ": "n", "ḷ": "l"}
@@ -103,12 +107,14 @@ def main(solved_dir, dpd_db, corpus_json, out_dir, gram_commit, dpd_version):
     for name, body in shards.items():
         with open(os.path.join(out_dir, "sandhi", name + ".json"), "w", encoding="utf-8") as fh:
             fh.write(body)
+        with gzip.GzipFile(os.path.join(out_dir, "sandhi", name + ".json.gz"), "wb", mtime=0) as fh:
+            fh.write(body.encode("utf-8"))
     n_i = sum(1 for v in recs.values() if v.get("i"))
     n_a = sum(1 for v in recs.values() if v.get("a") and not v.get("i"))
     n_d = sum(1 for v in recs.values() if v.get("d") and not v.get("i") and not v.get("a"))
     man = {"built": "_panel/build_sandhi.py",
            "shard_key": "adaptive: the shortest prefix of fold(form), padded with '_', that names a shard here; try depth 2 upward",
-           "cap_bytes": CAP,
+           "cap_bytes": CAP, "gz": True,
            "keys": len(recs), "with_iebh": n_i, "auto_only": n_a, "dpd_only": n_d, "unreadable_lines": bad,
            "source": {"forms": "every form of the Sixth Council corpus (gramaticas-pali-es recursos/corpus/corpus-formas.json) "
                                 "with no DPD headword",

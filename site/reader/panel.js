@@ -2566,20 +2566,23 @@ function famFill(div) {
 
 // SANDHI: WHAT IS KNOWN ABOUT THE JUNCTURES OF A FORM DPD HAS NO ENTRY FOR.
 //
-// `lookup/sandhi/` (built by _panel/build_sandhi.py, its own manifest) holds,
-// per corpus form with no DPD headword: the IEBH solver's readings of the
-// strong kinds (decided by IEBH, signed, from Nandisena's bank, an IEBH
-// pattern), its automatic proposals when it signals sandhi, and DPD's own
-// split.  Order of authority (IEBH, 2026-10-21): an IEBH reading first; when
-// there is none, DPD's split, labelled as DPD's and unverified (§9); the
-// automatic proposals always folded, because each recomposes the form by rule
-// and none is attested as what the text reads.
+// `lookup_eval/sandhi/` (built by _panel/build_sandhi.py, its own manifest,
+// gzipped shards) holds, per corpus form with no DPD headword: the IEBH
+// solver's readings of the strong kinds (decided by IEBH, signed, from
+// Nandisena's bank, an IEBH pattern), its automatic proposals when it signals
+// sandhi, and DPD's own split.  It is in the EVALUATION store because a record
+// may carry DPD's split, and stores/lookup/ carries no DPD -- so it follows the
+// evaluation switch like the DPD tab.  Order of authority (IEBH, 2026-10-21):
+// an IEBH reading first; when there is none, DPD's split, labelled as DPD's
+// and unverified (§9); the automatic proposals always folded, because each
+// recomposes the form by rule and none is attested as what the text reads.
 var SMANP = null;
 function smanifest() {
-  if (!SMANP) SMANP = jfetch(BASE + 'sandhi/index.json').catch(function () { return null; });
+  if (!SMANP) SMANP = jfetch(EBASE + 'sandhi/index.json').catch(function () { return null; });
   return SMANP;
 }
 function sandhiOf(word) {
+  if (!EVAL) return Promise.resolve(null);
   return smanifest().then(function (m) {
     if (!m || !m.shards) return null;
     var f = fold(word), name = null;
@@ -2588,7 +2591,7 @@ function sandhiOf(word) {
       if (m.shards[n]) name = n;
     }
     if (!name) return null;
-    return jfetch(BASE + 'sandhi/' + name + '.json').then(function (o) {
+    return jfetch(EBASE + 'sandhi/' + name + '.json', !!m.gz).then(function (o) {
       if (!o) return null;
       var w = niggCanon(word);
       return o[w] || o[w.toLowerCase()] || null;

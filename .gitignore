@@ -194,6 +194,15 @@ stores/lookup_eval/family/**/*.json
 !stores/lookup_eval/hw/
 stores/lookup_eval/hw/*.json
 !stores/lookup_eval/hw/index.json
+# `stores/lookup_eval/sandhi/` — what is known of the junctures of corpus forms DPD
+# has no entry for: the IEBH sandhi solver's readings, and DPD's own split shown
+# only as DPD's, unverified (_panel/build_sandhi.py, 2026-10-21). In the EVALUATION
+# store because a record may carry DPD's split and stores/lookup/ carries none.
+# WRITTEN WITH THE STORE, for the reason the family/ and hw/ notes give. Same
+# convention: only the .gz and the manifest are tracked and served.
+!stores/lookup_eval/sandhi/
+stores/lookup_eval/sandhi/*.json
+!stores/lookup_eval/sandhi/index.json
 _dictsrc/
 
 # Build-run stdout/stderr from _panel/ scripts (eval rebuilds, precision sweeps).
