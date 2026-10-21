@@ -203,6 +203,13 @@ stores/lookup_eval/hw/*.json
 !stores/lookup_eval/sandhi/
 stores/lookup_eval/sandhi/*.json
 !stores/lookup_eval/sandhi/index.json
+# `stores/lookup_eval/solver/` — the IEBH sandhi solver's lexicon for the reader pane's Sandhi button
+# (_panel/build_solver.py). In the evaluation store because the lexicon was built with DPD's form list.
+# Fragments tracked as .json.gz; indice.json and the manifest tracked plain.
+!stores/lookup_eval/solver/
+!stores/lookup_eval/solver/lexico/
+stores/lookup_eval/solver/lexico/*.json
+!stores/lookup_eval/solver/lexico/indice.json
 _dictsrc/
 
 # Build-run stdout/stderr from _panel/ scripts (eval rebuilds, precision sweeps).

@@ -1,0 +1,11 @@
+{
+ "source": "bthar-mx/gramaticas-pali-es",
+ "commit": "54e2cbe8614ce159479266ce09cad043fb79b9d3",
+ "engine_sha256": "b79b943cb4a32431f98f0c058adbc2ef098f911b6bdc81630b006a55d6af6a09",
+ "engine_version": "2.4",
+ "fragments": 31,
+ "forms": 873596,
+ "con_dpd": true,
+ "gz": true,
+ "licence": "CC BY-NC-ND 4.0, IEBH / BTHAR"
+}

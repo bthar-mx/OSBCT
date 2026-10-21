@@ -63,6 +63,8 @@ TARGETS = [
     # not in the list, so 'LIVE SITE MATCHES' could be printed while the
     # deployed panel was an older build with the flag defaulting off.
     ('/reader/panel.js',       'site/reader/panel.js',       'bytes'),
+    # 2026-10-21: the IEBH sandhi solver the pane's Sandhi button loads (_panel/build_solver.py).
+    ('/reader/sandhi-solver.js', 'site/reader/sandhi-solver.js', 'bytes'),
     # 2026-09-05: the one search implementation, and the manifest of the
     # postings shards it reads.  A stale searchcore.js against a new manifest
     # (or the reverse) is the split-brain this gate exists to see.

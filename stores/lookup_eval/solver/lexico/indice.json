@@ -1,0 +1,131 @@
+{
+ "origen": "recursos/corpus/corpus-formas.json + recursos/lexico/dpd-formas.txt",
+ "total": 873596,
+ "con_dpd": true,
+ "fragmentos": {
+  "a": {
+   "archivo": "a.json",
+   "formas": 135787
+  },
+  "b": {
+   "archivo": "b.json",
+   "formas": 31636
+  },
+  "c": {
+   "archivo": "c.json",
+   "formas": 25449
+  },
+  "d": {
+   "archivo": "d.json",
+   "formas": 43659
+  },
+  "e": {
+   "archivo": "e.json",
+   "formas": 11283
+  },
+  "g": {
+   "archivo": "g.json",
+   "formas": 20104
+  },
+  "h": {
+   "archivo": "h.json",
+   "formas": 9619
+  },
+  "i": {
+   "archivo": "i.json",
+   "formas": 8135
+  },
+  "j": {
+   "archivo": "j.json",
+   "formas": 12864
+  },
+  "k": {
+   "archivo": "k.json",
+   "formas": 56577
+  },
+  "l": {
+   "archivo": "l.json",
+   "formas": 10960
+  },
+  "m": {
+   "archivo": "m.json",
+   "formas": 38666
+  },
+  "n": {
+   "archivo": "n.json",
+   "formas": 42631
+  },
+  "o": {
+   "archivo": "o.json",
+   "formas": 7807
+  },
+  "p": {
+   "archivo": "p.json",
+   "formas": 110698
+  },
+  "r": {
+   "archivo": "r.json",
+   "formas": 15301
+  },
+  "s": {
+   "archivo": "s.json",
+   "formas": 115795
+  },
+  "t": {
+   "archivo": "t.json",
+   "formas": 30744
+  },
+  "u": {
+   "archivo": "u.json",
+   "formas": 35963
+  },
+  "v": {
+   "archivo": "v.json",
+   "formas": 64703
+  },
+  "y": {
+   "archivo": "y.json",
+   "formas": 11403
+  },
+  "ñ": {
+   "archivo": "ny.json",
+   "formas": 2829
+  },
+  "ā": {
+   "archivo": "aa.json",
+   "formas": 26998
+  },
+  "ī": {
+   "archivo": "ii.json",
+   "formas": 340
+  },
+  "ū": {
+   "archivo": "uu.json",
+   "formas": 718
+  },
+  "ḍ": {
+   "archivo": "dd.json",
+   "formas": 362
+  },
+  "ḷ": {
+   "archivo": "ll.json",
+   "formas": 23
+  },
+  "ṃ": {
+   "archivo": "mm.json",
+   "formas": 1
+  },
+  "ṅ": {
+   "archivo": "ng.json",
+   "formas": 9
+  },
+  "ṇ": {
+   "archivo": "nn.json",
+   "formas": 91
+  },
+  "ṭ": {
+   "archivo": "tt.json",
+   "formas": 2441
+  }
+ }
+}

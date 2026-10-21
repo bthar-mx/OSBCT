@@ -252,6 +252,30 @@ var S = {
   wl_sd_k_bank: {en: 'Nandisena’s bank', es: 'banco de Nandisena'},
   wl_sd_k_pattern: {en: 'IEBH pattern', es: 'pauta del IEBH'},
   wl_sd_sutta:  {en: 'Kaccāyana §%d (gramaticas.buddha-dhamma.net)', es: 'Kaccāyana §%d (gramaticas.buddha-dhamma.net)'},
+  wl_sd_k_auto: {en: 'automatic proposal', es: 'propuesta automática'},
+  wl_sv_btn:    {en: 'Sandhi ▸', es: 'Sandhi ▸'},
+  wl_sv_btn_t:  {en: 'Run the IEBH sandhi solver on this word. The first time, it loads the solver and part of its lexicon (a few MB).',
+                 es: 'Ejecutar el solucionador de sandhi del IEBH sobre esta palabra. La primera vez carga el solucionador y parte de su léxico (unos MB).'},
+  wl_sv_load:   {en: 'Loading the IEBH solver…', es: 'Cargando el solucionador del IEBH…'},
+  wl_sv_err:    {en: 'The IEBH solver could not be loaded.', es: 'No se pudo cargar el solucionador del IEBH.'},
+  wl_sv_head:   {en: 'IEBH solver:', es: 'Solucionador del IEBH:'},
+  wl_sv_none:   {en: 'IEBH solver: no reading for this word.', es: 'Solucionador del IEBH: ninguna lectura para esta palabra.'},
+  wl_sv_quiet:  {en: 'IEBH solver: no sandhi signalled; %d possible readings by rule',
+                 es: 'Solucionador del IEBH: no señala sandhi; %d lecturas posibles por regla'},
+  wl_sv_more:   {en: '%d more readings', es: '%d lecturas más'},
+  wl_sv_src:    {en: 'IEBH sandhi solver %v (gramaticas.buddha-dhamma.net), site mode solo-canon; copy of gramaticas-pali-es %c. A proposal recomposes the form by Kaccāyana’s suttas: the grammar can produce it; that the text reads it so is not shown.',
+                 es: 'Solucionador de sandhi del IEBH %v (gramaticas.buddha-dhamma.net), modo del sitio solo-canon; copia de gramaticas-pali-es %c. Una propuesta recompone la forma por los suttas de Kaccāyana: la gramática puede producirla; no se muestra que el texto la lea así.'},
+  wl_sv_sig_segura:  {en: 'sandhi signalled', es: 'sandhi señalado'},
+  wl_sv_sig_posible: {en: 'possible sandhi', es: 'sandhi posible'},
+  wl_sv_st_candidatos: {en: 'possible readings', es: 'lecturas posibles'},
+  wl_sv_st_firmada: {en: 'signed', es: 'firmada'},
+  wl_sv_st_fuera_del_alcance: {en: 'a compound: out of scope', es: 'compuesto: fuera del alcance'},
+  wl_sv_st_juntura_declarada: {en: 'junction marked in the edition', es: 'juntura marcada en la edición'},
+  wl_sv_st_juntura_sin_derivar: {en: 'junction marked, not derived', es: 'juntura marcada, sin derivar'},
+  wl_sv_st_no_resuelto: {en: 'unresolved', es: 'no resuelto'},
+  wl_sv_st_resuelto: {en: 'one reading', es: 'una lectura'},
+  wl_sv_st_sin_sandhi: {en: 'no sandhi', es: 'sin sandhi'},
+  wl_sv_st_sin_sandhi_por_regla: {en: 'no sandhi (pakati)', es: 'sin sandhi (pakati)'},
   wl_gram_term: {en: 'Grammatical term ↗', es: 'Término gramatical ↗'},
   wl_gram_term_t:{en: 'In the IEBH glossary of grammatical terms (gramaticas.buddha-dhamma.net)',
                  es: 'En el glosario de términos gramaticales del IEBH (gramaticas.buddha-dhamma.net)'},
@@ -1226,6 +1250,9 @@ var CSS = ''
 + '#wl .wl-pfx:hover{border-color:var(--accent);color:var(--accent)}'
 + '#wl .wl-sibs{margin-top:5px;display:flex;flex-wrap:wrap;gap:5px;align-items:baseline}'
 + '#wl .wl-sd{margin-top:5px;font-size:13px}#wl details.wl-sd summary{cursor:pointer}#wl .wl-sd a{color:inherit}'
++ '#wl .wl-svb{font:600 12px/1.3 Inter,system-ui,sans-serif;color:var(--accent);background:none;'
++ 'border:1px solid var(--line);border-radius:6px;padding:2px 8px;cursor:pointer}'
++ '#wl .wl-svb:hover{border-color:var(--accent)}#wl .wl-svb[disabled]{opacity:.5;cursor:default}'
 + '#wl .wl-sib{font:400 12.5px/1.3 Inter,system-ui,sans-serif;color:var(--fg);'
 + 'background:none;border:1px solid var(--line);border-radius:6px;'
 + 'padding:2px 6px;cursor:pointer}'
@@ -2039,7 +2066,8 @@ function render(d) {
                   + esc(s.w) + ' <span class="wl-cite">' + s.n + '</span></button>';
            }).join(' ') + '</div>'
        : '')
-    + sandhiHtml(d.sd);
+    + sandhiHtml(d.sd)
+    + solverBox(d.word);
   Array.prototype.forEach.call(
     document.getElementById('wlc').querySelectorAll('.wl-sib'), function (b) {
       b.addEventListener('click', function () {
@@ -2047,6 +2075,7 @@ function render(d) {
         lookup(b.dataset.w, d.para, true);
       });
     });
+  bindSolver(d);
   // how many entries each evaluation source has for this word
   d.n = {};
   var lems = (d.ev && d.ev.lem) || [];
@@ -2629,6 +2658,124 @@ function sandhiHtml(sd) {
       + sd.a.map(function (x) { return '<div>' + sdParts(x[0]) + ' <span class="wl-cite">' + sdSuttas(x[1]) + '</span></div>'; }).join('')
       + '</details>';
   return h;
+}
+
+// THE SANDHI BUTTON (IEBH, 2026-10-21): runs the IEBH sandhi solver on the clicked word, as Padakosa's
+// Sandhi switch does.  The stored line above (sandhiHtml) covers only forms DPD has no headword for; the
+// button answers for any word, when asked.
+//
+// The solver is gramaticas.buddha-dhamma.net's own engine, copied UNMODIFIED by _panel/build_solver.py:
+// site/reader/sandhi-solver.js (the page's <script id="motor"> block in a function scope; it sets
+// globalThis.SOLUCIONADOR) and its lexicon in stores/lookup_eval/solver/lexico/ (gzipped, on R2).  The
+// lexicon was built with DPD's form list, so it lives in the evaluation store and the button shows only
+// when that store is on, like the stored line.  In the site's mode (solo-canon) DPD takes no part in a
+// reading.  The engine reads its lexicon through the hook it offers, globalThis.__fetchJsonNode, which must
+// be set BEFORE the script runs; here it maps "lexico/X" onto the store and goes through jfetch (cache,
+// gzip sniffing, local fallback).  Nothing is fetched until the button is pressed.
+var SVV = '20261021a';           // bump when sandhi-solver.js is rebuilt
+var SOLVER = null, SVMAN = null, SVRES = {};
+function loadSolver() {
+  if (SOLVER) return SOLVER;
+  var base = EBASE + 'solver/lexico/';
+  globalThis.__fetchJsonNode = function (u) {
+    var name = String(u).replace(/^.*lexico\//, '');
+    return jfetch(base + name, name !== 'indice.json').then(function (v) {
+      if (v === null || v === undefined) throw new Error(u + ': not found');
+      return v;
+    });
+  };
+  var script = new Promise(function (ok, ko) {
+    if (globalThis.SOLUCIONADOR) return ok(globalThis.SOLUCIONADOR);
+    var s = document.createElement('script');
+    s.src = 'sandhi-solver.js?v=' + SVV;
+    s.onload = function () {
+      if (globalThis.SOLUCIONADOR) ok(globalThis.SOLUCIONADOR); else ko(new Error('no SOLUCIONADOR'));
+    };
+    s.onerror = function () { ko(new Error('sandhi-solver.js')); };
+    document.head.appendChild(s);
+  });
+  SOLVER = Promise.all([script, jfetch(EBASE + 'solver/index.json', false)]).then(function (r) {
+    SVMAN = r[1] || {};
+    return r[0];
+  });
+  SOLVER.catch(function () { SOLVER = null; });      // a failed load may be retried
+  return SOLVER;
+}
+function svKind(l) {
+  var p = l.procedencia || '';
+  return l.adjudicada ? 'adjudicated' : p === 'firmada' ? 'signed' : p.indexOf('del banco') === 0 ? 'bank'
+       : l.patron ? 'pattern' : 'auto';
+}
+function svSuttas(pasos) {
+  var out = [];
+  (pasos || []).forEach(function (p) {
+    String(p).replace(/§(\d+)/g, function (m, n) { n = +n; if (out.indexOf(n) < 0) out.push(n); return m; });
+  });
+  return out;
+}
+function solverHtml(r) {
+  var L = r.lecturas || [];
+  var src = T('wl_sv_src').replace('%v', (globalThis.SOLUCIONADOR && globalThis.SOLUCIONADOR.version) || '')
+    .replace('%c', ((SVMAN && SVMAN.commit) || '').slice(0, 7));
+  var st = r.estado ? T('wl_sv_st_' + r.estado) : '';
+  if (st.indexOf('wl_sv_st_') === 0) st = r.estado;
+  function rd(l) {
+    return '<div>' + sdParts(l.componentes || []) + ' <span class="wl-cite" title="' + esc((l.pasos || []).join(' → '))
+      + '">' + sdSuttas(svSuttas(l.pasos)) + ' · ' + esc(T('wl_sd_k_' + svKind(l))) + '</span></div>';
+  }
+  if (!L.length)
+    return '<div class="wl-sd wl-cite" title="' + esc(src) + '">' + esc(T('wl_sv_none')) + (st ? ' (' + esc(st) + ')' : '') + '</div>';
+  var strong = r.senal || L.some(function (l) { return svKind(l) !== 'auto'; })
+            || r.estado === 'firmada' || r.estado === 'juntura_declarada';
+  if (!strong)   // no sandhi signalled: the proposals stay folded, so they are not read as an analysis
+    return '<details class="wl-sd"><summary class="wl-cite" title="' + esc(src) + '">'
+      + esc(T('wl_sv_quiet').replace('%d', L.length)) + '</summary>' + L.map(rd).join('') + '</details>';
+  var h = '<div class="wl-sd"><span class="wl-cite" title="' + esc(src) + '">' + esc(T('wl_sv_head'))
+    + (r.senal ? ' ' + esc(T('wl_sv_sig_' + r.senal)) + ' ·' : '') + (st ? ' ' + esc(st) : '') + '</span></div>';
+  h += L.slice(0, 3).map(rd).join('');
+  if (L.length > 3)
+    h += '<details class="wl-sd"><summary class="wl-cite">' + esc(T('wl_sv_more').replace('%d', L.length - 3))
+      + '</summary>' + L.slice(3).map(rd).join('') + '</details>';
+  return h;
+}
+function solverBox(word) {
+  if (!EVAL) return '';
+  var done = SVRES[word];
+  return '<div class="wl-sd" id="wlsv">' + (done ? done
+    : '<button type="button" class="wl-svb" id="wlsvb" title="' + esc(T('wl_sv_btn_t')) + '">'
+      + esc(T('wl_sv_btn')) + '</button>') + '</div>';
+}
+function bindSolver(d) {
+  var box = document.getElementById('wlsv');
+  if (!box) return;
+  function bindSibs() {
+    Array.prototype.forEach.call(box.querySelectorAll('.wl-sib'), function (b) {
+      b.addEventListener('click', function () {
+        HIST.push({word: d.word, para: d.para}); updateBack();
+        lookup(b.dataset.w, d.para, true);
+      });
+    });
+  }
+  bindSibs();
+  var btn = document.getElementById('wlsvb');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    var word = d.word;
+    btn.disabled = true;
+    box.insertAdjacentHTML('beforeend', ' <span class="wl-cite">' + esc(T('wl_sv_load')) + '</span>');
+    loadSolver().then(function (S) {
+      return S.preparar(word).then(function () { return S.solucionar(word); });
+    }).then(function (r) {
+      SVRES[word] = solverHtml(r);
+      if (!current || current.word !== word) return;
+      box.innerHTML = SVRES[word];
+      bindSibs();
+    }).catch(function (e) {
+      if (window.console) console.warn('sandhi solver:', e);
+      if (!current || current.word !== word) return;
+      box.innerHTML = '<span class="wl-cite">' + esc(T('wl_sv_err')) + '</span>';
+    });
+  });
 }
 
 // LINKS INTO THE IEBH GRAMMARS (gramaticas.buddha-dhamma.net).
