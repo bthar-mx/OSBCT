@@ -1270,6 +1270,7 @@ var CSS = ''
   'body.wl-side.wl-open .main{padding-right:380px}'
 + 'body.wl-sheet.wl-open .main{padding-bottom:64vh}'
 + '.wl-mark{background:var(--hl);border-radius:2px}'
++ '.wl-mark::selection{background:var(--hl);color:inherit}'
   // the hover affordance.  `pointer-events:none` is not optional — the overlay
   // sits directly over the word, and without it every click would land on the
   // underline instead of the text and the panel would never open.
@@ -1556,6 +1557,16 @@ function mark(node, a, b) {
   var r = document.createRange(); r.setStart(node, a); r.setEnd(node, b + 1);
   markEl = document.createElement('mark'); markEl.className = 'wl-mark';
   try { r.surroundContents(markEl); } catch (e) { markEl = null; }
+  // THE MARKED WORD IS ALSO SELECTED (IEBH, 2026-10-21), so ⌘C copies it and
+  // a look-up tool in another app (Padakosa's ⌃⌥P) can read it.  The mark
+  // alone is not a selection: the copy came back empty.  Nothing in the
+  // reader listens to the selection; its colour is the mark's (::selection).
+  if (markEl) {
+    try {
+      var sel = window.getSelection(), rr = document.createRange();
+      rr.selectNodeContents(markEl); sel.removeAllRanges(); sel.addRange(rr);
+    } catch (e) {}
+  }
 }
 
 // ------------------------------------------------- the hover affordance ----
