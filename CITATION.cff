@@ -208,6 +208,14 @@ identifiers:
   # but because nothing added the line.  It exists: 10.5281/zenodo.21760727.
   # Checked against the Zenodo record's own Versions panel, 2026-08-06, which is
   # also where the concept DOI above was confirmed as `Cite all versions`.
+  # Minted 2026-10-21 and READ FROM THE RECORD (zenodo.org/api/records/23541744),
+  # not guessed: version 2.11.0, publication date 2026-10-21, the "New in
+  # 2.11.0" paragraph present at minting; deposit bthar-mx/OSBCT-v2.11.0.zip,
+  # 463 MB.  No 2.10.1 record exists: its GitHub release was never published,
+  # so E078 is archived for the first time here.
+  - type: doi
+    value: "10.5281/zenodo.23541744"
+    description: "Zenodo archive of v2.11.0 (21 October 2026)"
   # Minted 2026-09-06 and READ FROM THE RECORD (zenodo.org/records/22527597),
   # not guessed: version 2.10.0, publication date 2026-09-06, the "New in
   # 2.10.0" paragraph present at minting — the phrase rule (consecutive
